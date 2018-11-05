@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Created by zhangwanxin on 2018/11/4.
+import argparse
+import subprocess
+
+from log_info import LogMsgParser
+
+
+def log(log_filter=None, ignore_case=False, filter_exact=False):
+    cmd = ["adb", "logcat", "-v", "long"]
+    pro = subprocess.Popen(cmd, bufsize=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    err_code = pro.poll()
+    parser = LogMsgParser(log_filter=log_filter, filter_ignorecase=ignore_case, filter_exact=filter_exact)
+    while err_code is None:
+        line = pro.stdout.readline().strip()
+        if line:
+            parser.parser(line)
+            # print (">>>>>" + line)
+        err_code = pro.poll()
+
+
+argsParser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log", version="v1.0")
+# parser.add_argument('-update', '--update', dest='update', help='update ak', action='store_true')
+group = argsParser.add_argument_group()
+group.add_argument("-i", "--ignorecase", action="store_true", help="filter command  optional arg for ignore case")
+group.add_argument("-e", "--filterexact", action="store_true", help="filter command  optional arg for exact match")
+group.add_argument('-f', '--filter', dest='filter', help='only filter log tag', type=str, nargs=1)
+
+args = argsParser.parse_args()
+
+if args.filter:
+    log(str(args.filter[0]), ignore_case=args.ignorecase, filter_exact=args.filterexact)
+else:
+    log(None)

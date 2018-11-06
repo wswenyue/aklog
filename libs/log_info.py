@@ -34,9 +34,11 @@ class LogMsgParser(object):
     PATTERN_HEAD = re.compile(REGEX_LOG_HEAD)
     PATTERN_FILTER = None
     log = None
+    progress_id = None
 
-    def __init__(self, log_filter=None, filter_ignorecase=False, filter_exact=False):
-        print("filter={0};ignore={1};exact={2}".format(log_filter, filter_ignorecase, filter_exact))
+    def __init__(self, log_filter=None, filter_ignorecase=False, filter_exact=False, progress_id=None):
+        print("filter={0};ignore={1};exact={2};progress={3}".format(log_filter, filter_ignorecase, filter_exact,
+                                                                    progress_id))
         if comm_tools.is_not_empty(log_filter):
             if filter_exact:
                 re_filter = log_filter
@@ -48,6 +50,7 @@ class LogMsgParser(object):
                 self.PATTERN_FILTER = re.compile(re_filter)
         else:
             self.PATTERN_FILTER = None
+        self.progress_id = progress_id
 
     def parser(self, msg):
         if comm_tools.is_empty(msg):

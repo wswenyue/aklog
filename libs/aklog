@@ -7,7 +7,7 @@ import subprocess
 from log_info import LogMsgParser
 
 
-def log(log_filter=None, ignore_case=False, filter_exact=False):
+def log(log_filter=None, ignore_case=False, filter_exact=False, all_progress=False):
     cmd = ["adb", "logcat", "-v", "long"]
     pro = subprocess.Popen(cmd, bufsize=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     err_code = pro.poll()
@@ -23,6 +23,7 @@ def log(log_filter=None, ignore_case=False, filter_exact=False):
 argsParser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log", version="v1.0")
 # parser.add_argument('-update', '--update', dest='update', help='update ak', action='store_true')
 group = argsParser.add_argument_group()
+group.add_argument("-a", "--all", action="store_true", help="all process log")
 group.add_argument("-i", "--ignorecase", action="store_true", help="filter command  optional arg for ignore case")
 group.add_argument("-e", "--filterexact", action="store_true", help="filter command  optional arg for exact match")
 group.add_argument('-f', '--filter', dest='filter', help='only filter log tag', type=str, nargs=1)
@@ -30,6 +31,6 @@ group.add_argument('-f', '--filter', dest='filter', help='only filter log tag', 
 args = argsParser.parse_args()
 
 if args.filter:
-    log(str(args.filter[0]), ignore_case=args.ignorecase, filter_exact=args.filterexact)
+    log(str(args.filter[0]), ignore_case=args.ignorecase, filter_exact=args.filterexact, all_progress=args.all)
 else:
-    log(None)
+    log(None, all_progress=args.all)

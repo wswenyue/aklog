@@ -4,7 +4,8 @@
 import argparse
 import subprocess
 
-from log_info import LogMsgParser
+from libs.comm_tools import get_str
+from libs.log_info import LogMsgParser
 
 
 def log(log_filter=None, ignore_case=False, filter_exact=False, all_progress=False):
@@ -15,12 +16,12 @@ def log(log_filter=None, ignore_case=False, filter_exact=False, all_progress=Fal
     while err_code is None:
         line = pro.stdout.readline().strip()
         if line:
-            parser.parser(line)
+            parser.parser(get_str(line))
             # print (">>>>>" + line)
         err_code = pro.poll()
 
 
-argsParser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log", version="v1.0")
+argsParser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log")
 # parser.add_argument('-update', '--update', dest='update', help='update ak', action='store_true')
 group = argsParser.add_argument_group()
 group.add_argument("-a", "--all", action="store_true", help="all process log")

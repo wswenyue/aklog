@@ -3,8 +3,7 @@
 # Created by zhangwanxin on 2018/11/4.
 import re
 
-import color_print
-import comm_tools
+from libs import comm_tools, color_print
 
 
 class LogInfo(object):
@@ -72,7 +71,7 @@ class LogMsgParser(object):
                     self.log.msg = []
                 self.log.msg.append(msg)
             else:
-                print ">>>>" + msg
+                print (">>>>" + str(msg))
 
     def print_log(self):
         log = self.log

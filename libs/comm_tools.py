@@ -19,3 +19,12 @@ def is_empty(obj):
 
 def is_not_empty(obj):
     return not is_empty(obj)
+
+
+def get_str(obj):
+    if type(obj) is str:
+        return obj
+    elif type(obj) is bytes:
+        return obj.decode("utf-8")
+    else:
+        return str(obj)

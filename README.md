@@ -9,6 +9,14 @@ Run the following in your command-line:
 $ brew tap wswenyue/aklog && brew install aklog
 ```
 
+### Update
+
+If you need to update，Run the command:
+
+```shell
+$ brew upgrade aklog
+```
+
 ### How to use
 
 ```shell

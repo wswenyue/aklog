@@ -4,8 +4,8 @@
 import argparse
 import subprocess
 
-from libs.comm_tools import get_str, cmd_run_iter
-from libs.log_info import LogMsgParser
+from comm_tools import cmd_run_iter, get_str
+from log_info import LogMsgParser
 
 
 def cur_package_name():

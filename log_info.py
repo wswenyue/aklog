@@ -3,7 +3,8 @@
 # Created by zhangwanxin on 2018/11/4.
 import re
 
-from libs import comm_tools, color_print
+import color_print
+import comm_tools
 
 
 class LogInfo(object):

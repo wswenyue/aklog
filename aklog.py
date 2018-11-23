@@ -7,6 +7,8 @@ import subprocess
 from comm_tools import cmd_run_iter, get_str
 from log_info import LogMsgParser
 
+AKLOG_VERSION = "v2.1.0"
+
 
 def cur_package_name():
     for line in cmd_run_iter("adb shell dumpsys activity top"):
@@ -53,6 +55,7 @@ def log(log_filter=None, ignore_case=False, filter_exact=False, all_pid=False):
 
 argsParser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log")
 # parser.add_argument('-update', '--update', dest='update', help='update ak', action='store_true')
+argsParser.add_argument('-v', '--version', action='version', version=AKLOG_VERSION)
 group = argsParser.add_argument_group()
 group.add_argument("-a", "--all", action="store_true", help="all process log")
 group.add_argument("-i", "--ignorecase", action="store_true", help="filter command  optional arg for ignore case")

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by zhangwanxin on 2018/11/4.
+import subprocess
 
 
 def is_empty(obj):
@@ -28,3 +29,20 @@ def get_str(obj):
         return obj.decode("utf-8")
     else:
         return str(obj)
+
+
+def cmd_run_iter(cmd):
+    _cmd = str(cmd).split()
+    popen = subprocess.Popen(_cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    for stdout_line in iter(popen.stdout.readline, ""):
+        yield get_str(stdout_line)
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, _cmd)
+
+
+def cmd_run(cmd):
+    _cmd = str(cmd).split()
+    output = subprocess.check_output(_cmd)
+    return get_str(output)

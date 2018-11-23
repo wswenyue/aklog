@@ -4,15 +4,45 @@
 import argparse
 import subprocess
 
-from libs.comm_tools import get_str
+from libs.comm_tools import get_str, cmd_run_iter
 from libs.log_info import LogMsgParser
 
 
-def log(log_filter=None, ignore_case=False, filter_exact=False, all_progress=False):
+def cur_package_name():
+    for line in cmd_run_iter("adb shell dumpsys activity top"):
+        line = line.strip()
+        if line.startswith("ACTIVITY"):
+            pn = line.split("/")[0].split(" ")[1]
+            return pn
+    return None
+
+
+def cur_pid(package_name):
+    '''
+    匹配指定包对应的pid信息
+    :param package_name:
+    :return: {'com.wuba.bangjob': '20628', 'com.wuba.bangjob:pushservice': '20546'}
+    '''
+    pid_map = {}
+    for line in cmd_run_iter("adb shell ps"):
+        line = line.strip()
+        if package_name in line:
+            ls = line.split()
+            pid_map[ls[-1]] = ls[1]
+    return pid_map
+
+
+def log(log_filter=None, ignore_case=False, filter_exact=False, all_pid=False):
     cmd = ["adb", "logcat", "-v", "long"]
     pro = subprocess.Popen(cmd, bufsize=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     err_code = pro.poll()
-    parser = LogMsgParser(log_filter=log_filter, filter_ignorecase=ignore_case, filter_exact=filter_exact)
+    pn = cur_package_name()
+    if all_pid:
+        pids = None
+    else:
+        pids = cur_pid(pn)
+    parser = LogMsgParser(log_filter=log_filter, filter_ignorecase=ignore_case,
+                          filter_exact=filter_exact, pn=pn, pids=pids)
     while err_code is None:
         line = pro.stdout.readline().strip()
         if line:
@@ -32,6 +62,6 @@ group.add_argument('-f', '--filter', dest='filter', help='only filter log tag', 
 args = argsParser.parse_args()
 
 if args.filter:
-    log(str(args.filter[0]), ignore_case=args.ignorecase, filter_exact=args.filterexact, all_progress=args.all)
+    log(str(args.filter[0]), ignore_case=args.ignorecase, filter_exact=args.filterexact, all_pid=args.all)
 else:
-    log(None, all_progress=args.all)
+    log(None, all_pid=args.all)

@@ -33,11 +33,18 @@ class LogMsgParser(object):
     PATTERN_HEAD = re.compile(REGEX_LOG_HEAD)
     PATTERN_FILTER = None
     log = None
-    progress_id = None
+    pids = {}  # {'com.wuba.bangjob': '20628', 'com.wuba.bangjob:pushservice': '20546'}
 
-    def __init__(self, log_filter=None, filter_ignorecase=False, filter_exact=False, progress_id=None):
-        print("filter={0};ignore={1};exact={2};progress={3}".format(log_filter, filter_ignorecase, filter_exact,
-                                                                    progress_id))
+    def __init__(self, log_filter=None, filter_ignorecase=False,
+                 filter_exact=False, pn=None, pids=None):
+        print("cur packageName-->" + pn)
+        print("pids==>" + str(pids))
+        print("filter={0};ignore={1};exact={2}".format(
+            log_filter, filter_ignorecase, filter_exact))
+        self.init_filter(log_filter, filter_exact, filter_ignorecase)
+        self.init_pids(pids, pn)
+
+    def init_filter(self, log_filter, filter_exact, filter_ignorecase):
         if comm_tools.is_not_empty(log_filter):
             if filter_exact:
                 re_filter = log_filter
@@ -49,15 +56,22 @@ class LogMsgParser(object):
                 self.PATTERN_FILTER = re.compile(re_filter)
         else:
             self.PATTERN_FILTER = None
-        self.progress_id = progress_id
+
+    def init_pids(self, pids, pn):
+        if pids:
+            for package, pid in pids.items():
+                if package == pn:
+                    self.pids[pid] = "main"
+                else:
+                    self.pids[pid] = str(package).replace(pn, "")
 
     def parser(self, msg):
         if comm_tools.is_empty(msg):
             return
-        group = self.parser_head(msg.strip())
+        group = self.parser_head(msg)
         if group:
             if self.log:
-                self.print_log()
+                self.print_logic()
             self.log = LogInfo()
             self.log.date = group[0]
             self.log.time = group[1]
@@ -71,33 +85,39 @@ class LogMsgParser(object):
                     self.log.msg = []
                 self.log.msg.append(msg)
             else:
-                print (">>>>" + str(msg))
+                print(">>>>" + str(msg))
 
-    def print_log(self):
+    def print_logic(self):
         log = self.log
-        if log:
-            open_log = True
-            if self.PATTERN_FILTER:
-                if self.PATTERN_FILTER.match(log.tag):
-                    open_log = True
-                else:
-                    open_log = False
-
-            if open_log:
-                msg = "{0}#{1}#{2}#{3}#{4}#{5}".format(log.time, log.pid, log.tid, log.priority, log.tag,
-                                                       log.get_msg())
-                if log.priority == 'D':
-                    color_print.green(msg)
-                elif log.priority == 'E':
-                    color_print.red(msg)
-                elif log.priority == 'W':
-                    color_print.yellow(msg)
-                elif log.priority == 'I':
-                    color_print.light_blue(msg)
-                else:
-                    print (msg)
-
+        if self.is_print_log(log):
+            self._log_print(log)
         self.log = None
+
+    def is_print_log(self, log_msg):
+        if log_msg.pid not in self.pids.keys():
+            return False
+
+        if self.PATTERN_FILTER:
+            if not self.PATTERN_FILTER.match(log_msg.tag):
+                return False
+
+        return True
+
+    def _log_print(self, log_msg):
+        pid = self.pids.get(log_msg.pid, log_msg.pid)
+        msg = "{0}#{1}#{2}#{3}#{4}#{5}".format(log_msg.time, pid,
+                                               log_msg.tid, log_msg.priority, log_msg.tag,
+                                               log_msg.get_msg())
+        if log_msg.priority == 'D':
+            color_print.green(msg)
+        elif log_msg.priority == 'E':
+            color_print.red(msg)
+        elif log_msg.priority == 'W':
+            color_print.yellow(msg)
+        elif log_msg.priority == 'I':
+            color_print.light_blue(msg)
+        else:
+            print(msg)
 
     def parser_head(self, msg):
         match = self.PATTERN_HEAD.match(msg)

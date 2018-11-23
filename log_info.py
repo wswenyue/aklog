@@ -95,8 +95,9 @@ class LogMsgParser(object):
         self.log = None
 
     def is_print_log(self, log_msg):
-        if log_msg.pid not in self.pids.keys():
-            return False
+        if not comm_tools.is_empty(self.pids):
+            if log_msg.pid not in self.pids.keys():
+                return False
 
         if self.PATTERN_FILTER:
             if not self.PATTERN_FILTER.match(log_msg.tag):

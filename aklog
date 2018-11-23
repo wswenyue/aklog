@@ -9,7 +9,7 @@ has(){
 }
 
 if has "python"; then
-	python ${AK_DIR}/libs/aklog $@
+	python ${AK_DIR}/aklog.py $@
 else
 	echo >&2 "Failed to execute, please insatll python before."
 fi

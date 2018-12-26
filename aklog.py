@@ -4,10 +4,11 @@
 import argparse
 import subprocess
 
+import color_print
 from comm_tools import cmd_run_iter, get_str
 from log_info import LogMsgParser
 
-AKLOG_VERSION = "v2.1.0"
+AKLOG_VERSION = "v2.1.1"
 
 
 def cur_package_name():
@@ -48,7 +49,11 @@ def log(log_filter=None, ignore_case=False, filter_exact=False, all_pid=False):
     while err_code is None:
         line = pro.stdout.readline().strip()
         if line:
-            parser.parser(get_str(line))
+            try:
+                str_line = get_str(line)
+                parser.parser(str_line)
+            except Exception:
+                color_print.red("\n===========parser error===============\n")
             # print (">>>>>" + line)
         err_code = pro.poll()
 

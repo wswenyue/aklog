@@ -5,6 +5,7 @@ import re
 
 import color_print
 import comm_tools
+from apk_package import ProcessData
 
 
 class LogInfo(object):
@@ -34,16 +35,29 @@ class LogMsgParser(object):
     PATTERN_HEAD = re.compile(REGEX_LOG_HEAD)
     PATTERN_FILTER = None
     log = None
-    pids = {}  # {'com.wuba.bangjob': '20628', 'com.wuba.bangjob:pushservice': '20546'}
 
     def __init__(self, log_filter=None, filter_ignorecase=False,
-                 filter_exact=False, pn=None, pids=None):
-        print("cur packageName-->" + pn)
-        print("pids==>" + str(pids))
+                 filter_exact=False, pn=None, log_all=False):
+        print("cur packageName-->" + str(pn))
+        print("all log ==>" + str(log_all))
         print("filter={0};ignore={1};exact={2}".format(
             log_filter, filter_ignorecase, filter_exact))
+
         self.init_filter(log_filter, filter_exact, filter_ignorecase)
-        self.init_pids(pids, pn)
+
+        is_print_cur = False
+        target_pn = None
+
+        if not log_all:
+            if comm_tools.is_not_empty(pn):
+                target_pn = pn
+            else:
+                is_print_cur = True
+
+        ProcessData().start(cur=is_print_cur, pn=target_pn)
+
+    def get_apk_info(self):
+        return ProcessData().get_apk_info()
 
     def init_filter(self, log_filter, filter_exact, filter_ignorecase):
         if comm_tools.is_not_empty(log_filter):
@@ -57,14 +71,6 @@ class LogMsgParser(object):
                 self.PATTERN_FILTER = re.compile(re_filter)
         else:
             self.PATTERN_FILTER = None
-
-    def init_pids(self, pids, pn):
-        if pids:
-            for package, pid in pids.items():
-                if package == pn:
-                    self.pids[pid] = "main"
-                else:
-                    self.pids[pid] = str(package).replace(pn, "")
 
     def parser(self, msg):
         if comm_tools.is_empty(msg):
@@ -95,8 +101,10 @@ class LogMsgParser(object):
         self.log = None
 
     def is_print_log(self, log_msg):
-        if not comm_tools.is_empty(self.pids):
-            if log_msg.pid not in self.pids.keys():
+        apk = self.get_apk_info()
+        if apk:
+            # print("--->apk===>pid:{0};pn:{1};".format(apk.get_pid(), apk.get_name()))
+            if not apk.is_apk(log_msg.pid):
                 return False
 
         if self.PATTERN_FILTER:
@@ -106,7 +114,13 @@ class LogMsgParser(object):
         return True
 
     def _log_print(self, log_msg):
-        pid = self.pids.get(log_msg.pid, log_msg.pid)
+        apk = self.get_apk_info()
+        pid = None
+        if apk:
+            pid = apk.get_cur_tag(log_msg.pid)
+        if comm_tools.is_empty(pid):
+            pid = log_msg.pid
+
         msg = "{0}#{1}#{2}#{3}#{4}#{5}".format(log_msg.time, pid,
                                                log_msg.tid, log_msg.priority, log_msg.tag,
                                                log_msg.get_msg())

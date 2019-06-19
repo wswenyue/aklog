@@ -134,7 +134,7 @@ class ProcessData(object):
         return self.target_apk
 
     def __fetch(self):
-        print("apk info fetch...")
+        # print("apk info fetch...")
         if self.is_cur:
             apk = ApkProcess.get_cur_apk()
             if not apk:

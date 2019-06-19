@@ -23,8 +23,7 @@ def log(log_filter=None, ignore_case=False, filter_exact=False, all_log=False, p
             try:
                 str_line = get_str(line)
                 parser.parser(str_line)
-            except Exception, e:
-                color_print.red(str(e))
+            except Exception:
                 color_print.red("\n===========parser error===============\n")
             # print (">>>>>" + line)
         err_code = pro.poll()
@@ -54,5 +53,6 @@ def args_build():
 args_build()
 
 # if __name__ == '__main__':
-# log(None, pn="bangjob")
-# log(None)
+#     # log(None, pn="bangjob")
+#     # log("ZLogDebug")
+#     log(None)

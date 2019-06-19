@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by zhangwanxin on 2019/6/9.
-import thread
 import time
 
+import comm_tools
 from comm_tools import cmd_run_iter, is_not_empty
 
 
@@ -60,11 +60,11 @@ class ApkProcess(object):
         cur_pid = ApkProcess.__git_name_pid(self._name)
         if not cur_pid or len(cur_pid) <= 0:
             return None
-        _pn = cur_pid.keys()[0]
+        _pn = list(cur_pid.keys())[0]
         self._pn = str(_pn).strip().split(":")[0]
         self._pid = cur_pid.pop(self._pn)
         self._tag = "[" + self.__get_last_name() + "@]"
-        for c_pn, c_id in cur_pid.iteritems():
+        for c_pn, c_id in cur_pid.items():
             self.__add_child(c_pn, c_id)
 
     @staticmethod
@@ -93,11 +93,14 @@ class ApkProcess(object):
 
     @staticmethod
     def __cur_package_name():
-        for line in cmd_run_iter("adb shell dumpsys window windows | grep -E 'mFocusedApp'"):
-            line = line.strip()
-            if line.startswith("mFocusedApp="):
-                pn = line.split()[4].split("/")[0]
-                return pn
+        try:
+            for line in cmd_run_iter("adb shell dumpsys window windows | grep -E 'mFocusedApp'"):
+                line = line.strip()
+                if line.startswith("mFocusedApp="):
+                    pn = line.split()[4].split("/")[0]
+                    return pn
+        except Exception:
+            print("__cur_package_name fetch Error")
         return None
 
 
@@ -131,6 +134,7 @@ class ProcessData(object):
         return self.target_apk
 
     def __fetch(self):
+        print("apk info fetch...")
         if self.is_cur:
             apk = ApkProcess.get_cur_apk()
             if not apk:
@@ -149,7 +153,7 @@ class ProcessData(object):
     def start(self, cur=False, pn=None):
         self.is_cur = cur
         self.target_pn = pn
-        thread.start_new(ProcessData.__run, ("Thread-FetchAPKInfo", 5,))
+        comm_tools.new_thread(ProcessData.__run, ("Thread-FetchAPKInfo", 5))
 
     @staticmethod
     def __run(t_name, delay):

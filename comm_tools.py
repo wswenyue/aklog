@@ -5,6 +5,8 @@ import subprocess
 
 import threading
 
+import sys
+
 
 def is_empty(obj):
     if obj is None:
@@ -51,23 +53,11 @@ def cmd_run(cmd):
 
 
 def new_thread(f, args):
-    threading.Thread(target=f, args=args).start()
+    t = threading.Thread(target=f, args=args)
+    t.setDaemon(True)
+    t.start()
 
-    # version = sys.version_info[0]
-    # if version == 3:
-    #     import _thread
-    #
-    #     _thread.start_new_thread(function, args)
-    # elif version == 2:
-    #     import thread
-    #     thread.start_new(function, args)
 
-#
-# def test(name, index):
-#     while True:
-#         print(index)
-#         time.sleep(2)
-#
-# print("test--begin")
-# new_thread(test, ("name-11", 2))
-# print("test--end")
+def is_py3():
+    return sys.version_info[0] == 3
+

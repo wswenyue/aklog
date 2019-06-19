@@ -43,11 +43,24 @@ def args_build():
 
     args = argsParser.parse_args()
 
+    _pn = None
+    _filter = None
+    _ignore_case = False
+    _filter_exact = False
+    _all_log = False
+
+    if args.package:
+        _pn = str(args.package[0])
+
     if args.filter:
-        log(str(args.filter[0]), ignore_case=args.ignorecase, filter_exact=args.filterexact, all_log=args.all,
-            pn=args.package[0])
-    else:
-        log(None, all_log=args.all, pn=args.package[0])
+        _filter = str(args.filter[0])
+        _ignore_case = bool(args.ignorecase)
+        _filter_exact = bool(args.filterexact)
+
+    if args.all:
+        _all_log = bool(args.all)
+
+    log(_filter, ignore_case=_ignore_case, filter_exact=_filter_exact, all_log=_all_log, pn=_pn)
 
 
 args_build()

@@ -3,69 +3,113 @@
 # Created by zhangwanxin on 2018/11/4.
 import argparse
 import subprocess
+from typing import Optional, List
 
 import color_print
+import comm_tools
+from adb_utils import AdbHelper
+from app_info import AppInfoHelper
 from comm_tools import get_str
-from log_info import LogMsgParser
+from log_filter import LogFilter
+from log_parser import LogMsgParser
 
-AKLOG_VERSION = "v3.0.0"
+AK_LOG_VERSION = "v3.0.0"
 
 
-def log(log_filter=None, ignore_case=False, filter_exact=False, all_log=False, pn=None):
-    cmd = ["adb", "logcat", "-v", "long"]
-    pro = subprocess.Popen(cmd, bufsize=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+def log(_filter: LogFilter):
+    adb = AdbHelper()
+    adb.check_connect()
+    AppInfoHelper.start()
+    pro = adb.popen("logcat -v long", buf_size=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     err_code = pro.poll()
-    parser = LogMsgParser(log_filter=log_filter, filter_ignorecase=ignore_case,
-                          filter_exact=filter_exact, pn=pn, log_all=all_log)
+    parser = LogMsgParser(_filter)
+    global _line
     while err_code is None:
-        line = pro.stdout.readline().strip()
-        if line:
-            try:
-                str_line = get_str(line)
+        try:
+            _line = pro.stdout.readline()
+            if _line:
+                str_line = get_str(_line)
                 parser.parser(str_line)
-            except Exception:
-                color_print.red("\n===========parser error===============\n")
+        except Exception as e:
+            color_print.red(f"===========parser error===============\n{e}")
+            if _line:
+                print(f"==>{_line}<==")
             # print (">>>>>" + line)
         err_code = pro.poll()
 
 
-def args_build():
-    argsParser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log")
-    # parser.add_argument('-update', '--update', dest='update', help='update ak', action='store_true')
-    argsParser.add_argument('-v', '--version', action='version', version=AKLOG_VERSION)
-    group = argsParser.add_argument_group()
-    group.add_argument("-a", "--all", action="store_true", help="all process log")
-    group.add_argument("-i", "--ignorecase", action="store_true", help="filter command  optional arg for ignore case")
-    group.add_argument("-e", "--filterexact", action="store_true", help="filter command  optional arg for exact match")
-    # group.add_argument('-f', '--filter', dest='filter', help='only filter log tag', type=str, nargs=1)
-    argsParser.add_argument('-f', '--filter', dest='filter', help='only filter log tag', type=str, nargs=1)
-    argsParser.add_argument('-p', '--package', dest='package', help='filter target package apk logs', type=str, nargs=1)
+def main_run(argv: Optional[List] = None):
+    args_parser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log")
+    args_parser.add_argument('-v', '--version', action='version', version=AK_LOG_VERSION)
 
-    args = argsParser.parse_args()
+    args_parser.add_argument('-t', '--tag', dest='tag', help='Filter logs with tag', type=str, nargs=1)
+    args_parser.add_argument('-l', '--level', dest='level', help='Filter logs using log level (V,D,I,W,E)', type=str,
+                             nargs=1)
+    args_parser.add_argument('-m', '--msg', dest='msg', help='Filter logs with msg', type=str, nargs=1)
+    args_parser.add_argument('-p', '--package', dest='package',
+                             help='Filter logs with package',
+                             type=str, nargs=1)
+    args_parser.add_argument('-pe', '--package_exclude', dest='package_exclude',
+                             help='Use package name to exclude logs, support string array',
+                             type=str, nargs='+')
 
-    _pn = None
-    _filter = None
-    _ignore_case = False
-    _filter_exact = False
-    _all_log = False
+    group = args_parser.add_argument_group("ext")
+    group.add_argument("-i", "--tag_case", dest='tag_case',
+                       help="Filter tags using matching case pattern",
+                       action='store_true')
+    group.add_argument("-e", "--tag_exact", dest='tag_exact',
+                       help="Filter tags using full match mode",
+                       action='store_true')
+    group.add_argument("-a", "--all_package", dest='all_package',
+                       help="Do not filter packages",
+                       action='store_true')
+
+    # args_parser.print_help()
+
+    args = args_parser.parse_args(args=argv)
+    # print(args)
+
+    _package: Optional[str] = None
+    _package_exclude: Optional[List[str]] = None
+    _tag: Optional[str] = None
+    _is_tag_exact: bool = False
+    _is_tag_ignore_case: bool = True
+    _msg: Optional[str] = None
+    _priority: Optional[str] = None
+    _is_package_all: bool = False
 
     if args.package:
-        _pn = str(args.package[0])
+        _package = comm_tools.get_str(args.package[0])
+    if args.package_exclude:
+        _package_exclude = args.package_exclude
+    if args.all_package:
+        _is_package_all = bool(args.all_package)
 
-    if args.filter:
-        _filter = str(args.filter[0])
-        _ignore_case = bool(args.ignorecase)
-        _filter_exact = bool(args.filterexact)
+    if args.tag:
+        _tag = comm_tools.get_str(args.tag[0])
 
-    if args.all:
-        _all_log = bool(args.all)
+    if args.tag_case:
+        _is_tag_ignore_case = not bool(args.tag_case)
+    if args.tag_exact:
+        _is_tag_exact = bool(args.tag_exact)
 
-    log(_filter, ignore_case=_ignore_case, filter_exact=_filter_exact, all_log=_all_log, pn=_pn)
+    if args.level:
+        _priority = comm_tools.get_str(args.level[0])
+    if args.msg:
+        _msg = comm_tools.get_str(args.msg[0])
+
+    log(LogFilter(
+        _package=_package,
+        _package_exclude=_package_exclude,
+        _is_package_all=_is_package_all,
+        _tag=_tag, _is_tag_exact=_is_tag_exact, _is_tag_ignore_case=_is_tag_ignore_case,
+        _msg=_msg, _priority=_priority
+    ))
 
 
-args_build()
-
-# if __name__ == '__main__':
-#     # log(None, pn="bangjob")
-#     # log("ZLogDebug")
-#     log(None)
+if __name__ == '__main__':
+    # log(None, pn="wuba")
+    # log("ZLogDebug")
+    # log(None)
+    # main_run("-p wuba -t zcm".split())
+    main_run()

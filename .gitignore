@@ -1,3 +1,4 @@
 *.pyc
 /libs/*.pyc
 .idea/*
+.idea

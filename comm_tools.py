@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by zhangwanxin on 2018/11/4.
+import os
+import platform
 import subprocess
+import sys
 
 import threading
-
-import sys
+from typing import Tuple
 
 
 def is_empty(obj):
@@ -18,6 +20,11 @@ def is_empty(obj):
             return True
         elif obj.strip() == "":
             return True
+    if type(obj) is list:
+        if len(obj) <= 0:
+            return True
+    if type(obj) is dict:
+        return bool(obj)
     else:
         return False
 
@@ -30,7 +37,8 @@ def get_str(obj):
     if type(obj) is str:
         return obj
     elif type(obj) is bytes:
-        return obj.decode("utf-8")
+        return bytes.decode(obj, encoding="utf-8", errors="ignore")
+        # return obj.decode("utf-8")
     else:
         return str(obj)
 
@@ -52,12 +60,32 @@ def cmd_run(cmd):
     return get_str(output)
 
 
-def new_thread(f, args):
+def new_thread(f, name: str = None, args: Tuple = ()):
     t = threading.Thread(target=f, args=args)
     t.setDaemon(True)
+    if name:
+        t.name = name
     t.start()
 
 
 def is_py3():
     return sys.version_info[0] == 3
 
+
+def is_windows_os() -> bool:
+    # The output of platform.system() is as follows:
+    # Linux: Linux
+    # Mac: Darwin
+    # Windows: Windows
+    return platform.system() == "Windows"
+
+
+def is_exe(fpath: str) -> bool:
+    """
+    check file path is executable file
+    :param fpath:
+    :return:
+    """
+    if not fpath:
+        return False
+    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)

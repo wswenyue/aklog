@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 # Created by zhangwanxin on 2018/11/4.
 
-'''
+"""
 同时设置背景和前景
 print("\033[95;46m {}\033[00m".format(msg))
-'''
+"""
 
 
-class colors:
+class Colors(object):
     reset = '\033[0m'
     bold = '\033[01m'
     disable = '\033[02m'
@@ -46,7 +46,7 @@ class colors:
 
 
 def red(msg):
-    print(colors.fg.red + msg + colors.reset)
+    print(Colors.fg.red + msg + Colors.reset)
 
 
 def tag(msg):
@@ -55,36 +55,36 @@ def tag(msg):
 
 # test
 def log():
-    msg = colors.reset + "\033[1;31;42m TAG\033[00m " + colors.fg.red + "hello world" + colors.reset
+    msg = Colors.reset + "\033[1;31;42m TAG\033[00m " + Colors.fg.red + "hello world" + Colors.reset
     print(msg)
 
 
 def green(msg):
-    print(colors.fg.green + msg + colors.reset)
+    print(Colors.fg.green + msg + Colors.reset)
 
 
 def yellow(msg):
-    print(colors.fg.yellow + msg + colors.reset)
+    print(Colors.fg.yellow + msg + Colors.reset)
 
 
 def light_blue(msg):
-    print(colors.fg.light_blue + msg + colors.reset)
+    print(Colors.fg.light_blue + msg + Colors.reset)
 
 
 def purple(msg):
-    print(colors.fg.purple + msg + colors.reset)
+    print(Colors.fg.purple + msg + Colors.reset)
 
 
 def cyan(msg):
-    print(colors.fg.cyan + msg + colors.reset)
+    print(Colors.fg.cyan + msg + Colors.reset)
 
 
 def light_gray(msg):
-    print(colors.fg.light_grey + msg + colors.reset)
+    print(Colors.fg.light_grey + msg + Colors.reset)
 
 
 def black(msg):
-    print(colors.fg.black + msg + colors.reset)
+    print(Colors.fg.black + msg + Colors.reset)
 
 
 def print_format_table():
@@ -95,8 +95,8 @@ def print_format_table():
         for fg in range(30, 38):
             s1 = ''
             for bg in range(40, 48):
-                format = ';'.join([str(style), str(fg), str(bg)])
-                s1 += '\x1b[%sm %s \x1b[0m' % (format, format)
+                _format = ';'.join([str(style), str(fg), str(bg)])
+                s1 += '\x1b[%sm %s \x1b[0m' % (_format, _format)
             print(s1)
         print('\n')
 

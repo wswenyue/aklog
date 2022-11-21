@@ -7,49 +7,53 @@ see : https://www.cnblogs.com/liuzhipenglove/p/7063808.html
 """
 import os
 import subprocess
-import threading
 
+import comm_tools
 from comm_tools import is_windows_os, is_exe, cmd_run_iter, is_empty, get_str
 
 
-class AdbHelper(object):
-    _instance_lock = threading.Lock()
+class AdbCmd(object):
+    _adb = None
 
-    @classmethod
-    def instance(cls, *args, **kwargs):
-        if not hasattr(AdbHelper, "_instance"):
-            with AdbHelper._instance_lock:
-                if not hasattr(AdbHelper, "_instance"):
-                    AdbHelper._instance = AdbHelper(*args, **kwargs)
-        return AdbHelper._instance
-
-    def __init__(self, adb_path=None, open_log=False):
-        self._open_log = open_log
-        self._adb = adb_path
-        self.__find_adb()
-
-    def __find_adb(self):
-        if not self._adb:
+    @staticmethod
+    def find_adb(adb_path: str = None) -> str:
+        if comm_tools.is_not_empty(AdbCmd._adb):
+            return AdbCmd._adb
+        _path = None
+        if comm_tools.is_empty(adb_path):
             if "ANDROID_HOME" in os.environ:
                 if is_windows_os():
                     path = os.path.join(os.environ["ANDROID_HOME"], "platform-tools", "adb.exe")
                     if os.path.exists(path):
-                        self._adb = path
+                        _path = path
                     else:
                         raise EnvironmentError(
                             "Adb not found in $ANDROID_HOME path: %s." % os.environ["ANDROID_HOME"])
                 else:
                     path = os.path.join(os.environ["ANDROID_HOME"], "platform-tools", "adb")
                     if os.path.exists(path):
-                        self._adb = path
+                        _path = path
                     else:
                         raise EnvironmentError(
                             "Adb not found in $ANDROID_HOME path: %s." % os.environ["ANDROID_HOME"])
             else:
                 raise EnvironmentError(
                     "Adb not found in $ANDROID_HOME path: %s." % os.environ["ANDROID_HOME"])
-        if not is_exe(self._adb):
-            raise ValueError(f"the {self._adb} is not executable file!!!")
+        else:
+            _path = adb_path
+
+        if not is_exe(_path):
+            raise ValueError(f"the {_path} is not executable file!!!")
+        else:
+            AdbCmd._adb = _path
+        return AdbCmd._adb
+
+
+class AdbHelper(object):
+
+    def __init__(self, adb_path=None, open_log=False):
+        self._open_log = open_log
+        self._adb = AdbCmd.find_adb(adb_path)
 
     def __check_adb_connect(self):
         _cmd = f"{self._adb} devices"
@@ -85,6 +89,8 @@ class AdbHelper(object):
         process = subprocess.Popen(str(_cmd).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
         if process.returncode:
+            if self._open_log:
+                print(f"error: {err}")
             raise subprocess.CalledProcessError(process.returncode, cmd)
         return get_str(out)
 

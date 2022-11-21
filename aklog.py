@@ -13,6 +13,7 @@ from comm_tools import get_str
 from format_content import JsonValueFormat
 from log_filter import LogFilter
 from log_parser import LogMsgParser
+from screen_cap_tools import ScreenCapTools
 
 AK_LOG_VERSION = "v4.0.1"
 
@@ -82,6 +83,17 @@ def parser_and_run_log(args):
     log(log_filter)
 
 
+def parser_run_cmd(args) -> bool:
+    if args.cmd_screen_cap:
+        _dir = comm_tools.get_str(args.cmd_screen_cap)
+        if _dir == 'null':
+            _dir = None
+        ScreenCapTools(_dir).do_capture()
+        return True
+
+    return False
+
+
 def main_run(argv: Optional[List] = None):
     args_parser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log")
     args_parser.add_argument('-v', '--version', action='version', version=AK_LOG_VERSION)
@@ -103,7 +115,7 @@ def main_run(argv: Optional[List] = None):
                              help='Use package name to exclude logs, support string array',
                              type=str, nargs='+')
 
-    group = args_parser.add_argument_group("ext")
+    group = args_parser.add_argument_group("log_ext")
     group.add_argument("-i", "--tag_case", dest='tag_case',
                        help="Filter tags using matching case pattern",
                        action='store_true')
@@ -114,10 +126,18 @@ def main_run(argv: Optional[List] = None):
                        help="Do not filter packages",
                        action='store_true')
 
+    cmd = args_parser.add_argument_group("cmd")
+    cmd.add_argument("-cs", "--cmd_screen_cap", dest="cmd_screen_cap",
+                     help="Capture the current screen and save it to the specified location (default is the "
+                          "'~/Desktop/screen/')",
+                     type=str, nargs='?', const="null", default="null")
+
     # args_parser.print_help()
 
     args = args_parser.parse_args(args=argv)
     # print(args)
+    if parser_run_cmd(args):
+        return
     parser_and_run_log(args)
 
 

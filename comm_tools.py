@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by wswenyue on 2018/11/4.
+import errno
 import os
 import platform
 import subprocess
@@ -78,6 +79,40 @@ def is_windows_os() -> bool:
     # Mac: Darwin
     # Windows: Windows
     return platform.system() == "Windows"
+
+
+def is_mac_os() -> bool:
+    # The output of platform.system() is as follows:
+    # Linux: Linux
+    # Mac: Darwin
+    # Windows: Windows
+    return platform.system() == "Darwin"
+
+
+def get_user_home_dir() -> str:
+    if is_windows_os():
+        return os.path.join(os.environ['USERPROFILE'])
+    else:
+        return os.path.join(os.path.expanduser('~'))
+
+
+def get_user_desktop_dir(file_name: str = None) -> str:
+    if file_name:
+        return os.path.join(os.path.join(get_user_home_dir(), 'Desktop'), file_name)
+    else:
+        return os.path.join(get_user_home_dir(), 'Desktop')
+
+
+def create_dir_not_exists(path):
+    if os.path.exists(path) and os.path.isdir(path):
+        # print(f"{path} already exists!!!")
+        return
+    try:
+        dir_path = os.path.dirname(path)
+        os.makedirs(dir_path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise exception
 
 
 def is_exe(fpath: str) -> bool:

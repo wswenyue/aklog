@@ -14,7 +14,7 @@ from format_content import IFormatContent, JsonValueFormat
 from log_filter import LogFilter
 from log_parser import LogMsgParser
 
-AK_LOG_VERSION = "v3.0.0"
+AK_LOG_VERSION = "v4.0.0"
 
 
 def log(_filter: LogFilter):

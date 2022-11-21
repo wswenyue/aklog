@@ -39,6 +39,49 @@ def log(_filter: LogFilter):
         err_code = pro.poll()
 
 
+def parser_and_run_log(args):
+    log_filter = LogFilter()
+
+    if args.package:
+        log_filter.package = comm_tools.get_str(args.package[0])
+    if args.package_exclude:
+        log_filter.package_exclude = args.package_exclude
+    if args.all_package:
+        log_filter.is_package_all = bool(args.all_package)
+
+    if args.tag_case:
+        log_filter.is_tag_ignore_case = not bool(args.tag_case)
+    if args.tag_exact:
+        log_filter.is_tag_exact = bool(args.tag_exact)
+
+    if args.level:
+        log_filter.priority(comm_tools.get_str(args.level[0]))
+
+    if args.tag:
+        _tags = []
+        for _tag in args.tag:
+            if comm_tools.is_not_empty(_tag):
+                _tags.append(comm_tools.get_str(_tag))
+        log_filter.tags = _tags
+
+    if args.msg:
+        _msgs = []
+        for _msg in args.msg:
+            if comm_tools.is_not_empty(_msg):
+                _msgs.append(comm_tools.get_str(_msg))
+        log_filter.msgs = _msgs
+
+    if args.msg_json_value:
+        json_keys = []
+        for key in args.msg_json_value:
+            if comm_tools.is_not_empty(key):
+                json_keys.append(comm_tools.get_str(key))
+        if comm_tools.is_not_empty(json_keys):
+            log_filter.msg_format = JsonValueFormat(json_keys)
+
+    log(log_filter)
+
+
 def main_run(argv: Optional[List] = None):
     args_parser = argparse.ArgumentParser(description="Android developer's Swiss Army Knife for Log")
     args_parser.add_argument('-v', '--version', action='version', version=AK_LOG_VERSION)
@@ -75,59 +118,7 @@ def main_run(argv: Optional[List] = None):
 
     args = args_parser.parse_args(args=argv)
     # print(args)
-
-    _package: Optional[str] = None
-    _package_exclude: Optional[List[str]] = None
-    _is_tag_exact: bool = False
-    _is_tag_ignore_case: bool = True
-    _priority: Optional[str] = None
-    _is_package_all: bool = False
-
-    if args.package:
-        _package = comm_tools.get_str(args.package[0])
-    if args.package_exclude:
-        _package_exclude = args.package_exclude
-    if args.all_package:
-        _is_package_all = bool(args.all_package)
-
-    if args.tag_case:
-        _is_tag_ignore_case = not bool(args.tag_case)
-    if args.tag_exact:
-        _is_tag_exact = bool(args.tag_exact)
-    if args.level:
-        _priority = comm_tools.get_str(args.level[0])
-
-    log_filter = LogFilter(
-        _package=_package,
-        _package_exclude=_package_exclude,
-        _is_package_all=_is_package_all,
-        _is_tag_exact=_is_tag_exact, _is_tag_ignore_case=_is_tag_ignore_case,
-        _priority=_priority
-    )
-
-    if args.tag:
-        _tags = []
-        for _tag in args.tag:
-            if comm_tools.is_not_empty(_tag):
-                _tags.append(comm_tools.get_str(_tag))
-        log_filter.tags = _tags
-
-    if args.msg:
-        _msgs = []
-        for _msg in args.msg:
-            if comm_tools.is_not_empty(_msg):
-                _msgs.append(comm_tools.get_str(_msg))
-        log_filter.msgs = _msgs
-
-    if args.msg_json_value:
-        json_keys = []
-        for key in args.msg_json_value:
-            if comm_tools.is_not_empty(key):
-                json_keys.append(comm_tools.get_str(key))
-        if comm_tools.is_not_empty(json_keys):
-            log_filter.msg_format = JsonValueFormat(json_keys)
-
-    log(log_filter)
+    parser_and_run_log(args)
 
 
 if __name__ == '__main__':

@@ -4,10 +4,11 @@
 @author:   wswenyue
 @date:     2022/11/10 
 """
-from typing import List
+from typing import List, Optional
 
 import comm_tools
 from app_info import AppInfoHelper
+from format_content import IFormatContent
 from log_info import LogInfo, LogLevelHelper
 
 
@@ -21,6 +22,7 @@ class LogFilter(object):
                  _is_tag_exact: bool = False,
                  _is_tag_ignore_case: bool = True,
                  _msg: str = None,
+                 _msg_format: IFormatContent = None,
                  _priority: str = None):
         """
          过滤
@@ -47,6 +49,7 @@ class LogFilter(object):
         self._is_tag_exact = _is_tag_exact
         self._is_tag_ignore_case = _is_tag_ignore_case
         self._msg = _msg
+        self._msg_format: Optional[IFormatContent] = _msg_format
         self._level = LogLevelHelper.level_code(_priority)
 
     def filter_package(self, package: str) -> bool:
@@ -105,5 +108,6 @@ class LogFilter(object):
                 and self.filter_level(log.get_level()) \
                 and self.filter_tag(log.tag) \
                 and self.filter_msg(log.get_msg_content()):
+            log.msg_format = self._msg_format
             return True
         return False

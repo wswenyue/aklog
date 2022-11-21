@@ -67,7 +67,8 @@ class AppInfoHelper(object):
                 # print(f"=>{line}<=")
                 ls = line.strip().split()
                 if len(ls) != 9:
-                    raise ValueError(f"parser Error={len(ls)}=>" + line)
+                    continue
+                    # raise ValueError(f"parser Error={len(ls)}=>" + line)
                 # USER      PID   PPID  VSIZE  RSS   WCHAN              PC  NAME
                 user = ls[0]
                 pid = ls[1]
@@ -97,6 +98,13 @@ class AppInfoHelper(object):
     @staticmethod
     def _get_cur_app_package():
         try:
+            p = comm_tools.get_str(
+                AdbHelper().run_cmd("shell dumpsys activity top | grep ACTIVITY").split()[-3].split('/')[0])
+            if comm_tools.is_not_empty(p):
+                return p
+        except Exception as e:
+            print(f"get_cur_app_package 1Error==>{e}")
+        try:
             for line in AdbHelper().cmd_run_iter("shell dumpsys window windows | grep -E 'mFocusedApp'"):
                 line = line.strip()
                 if line.startswith("mFocusedApp="):
@@ -119,5 +127,5 @@ class AppInfoHelper(object):
 
 #
 # if __name__ == '__main__':
-#     AppInfoHelper.start()
-#     time.sleep(1000)
+# AppInfoHelper.start()
+# time.sleep(1000)

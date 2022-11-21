@@ -10,6 +10,7 @@ import comm_tools
 from adb_utils import AdbHelper
 from app_info import AppInfoHelper
 from comm_tools import get_str
+from format_content import IFormatContent, JsonValueFormat
 from log_filter import LogFilter
 from log_parser import LogMsgParser
 
@@ -45,7 +46,13 @@ def main_run(argv: Optional[List] = None):
     args_parser.add_argument('-t', '--tag', dest='tag', help='Filter logs with tag', type=str, nargs=1)
     args_parser.add_argument('-l', '--level', dest='level', help='Filter logs using log level (V,D,I,W,E)', type=str,
                              nargs=1)
+
     args_parser.add_argument('-m', '--msg', dest='msg', help='Filter logs with msg', type=str, nargs=1)
+    args_parser.add_argument('-mj', '--msg_json_value', dest='msg_json_value',
+                             help='Get the value of the given key from the data of the message content json class '
+                                  'structure formatted output, support string array',
+                             type=str, nargs='+')
+
     args_parser.add_argument('-p', '--package', dest='package',
                              help='Filter logs with package',
                              type=str, nargs=1)
@@ -77,6 +84,7 @@ def main_run(argv: Optional[List] = None):
     _msg: Optional[str] = None
     _priority: Optional[str] = None
     _is_package_all: bool = False
+    _msg_format: Optional[IFormatContent] = None
 
     if args.package:
         _package = comm_tools.get_str(args.package[0])
@@ -95,15 +103,25 @@ def main_run(argv: Optional[List] = None):
 
     if args.level:
         _priority = comm_tools.get_str(args.level[0])
+
     if args.msg:
         _msg = comm_tools.get_str(args.msg[0])
+    if args.msg_json_value:
+        json_keys = []
+        for key in args.msg_json_value:
+            if comm_tools.is_not_empty(key):
+                json_keys.append(comm_tools.get_str(key))
+        if comm_tools.is_not_empty(json_keys):
+            _msg_format = JsonValueFormat(json_keys)
 
     log(LogFilter(
         _package=_package,
         _package_exclude=_package_exclude,
         _is_package_all=_is_package_all,
         _tag=_tag, _is_tag_exact=_is_tag_exact, _is_tag_ignore_case=_is_tag_ignore_case,
-        _msg=_msg, _priority=_priority
+        _msg=_msg,
+        _msg_format=_msg_format,
+        _priority=_priority
     ))
 
 

@@ -15,8 +15,7 @@ from log_info import LogInfo
 class LogMsgParser(object):
     # [ <datetime> <pid>:<tid> <priority>/<tag> ]
     # [ 08-28 22:39:39.974  1785: 1832 D/HeadsetStateMachine ]
-    REGEX_LOG_HEAD = r"^\[\s*(\d{2}-\d{2})\s*(\d{2}:\d{2}:\d{2}.\d+)\s*(\d+):\s*(\d+)\s*([I|D|E|V|W])/(.*)\]$"
-    PATTERN_HEAD = re.compile(REGEX_LOG_HEAD)
+    PATTERN_HEAD = re.compile(r"^\[\s*(\d{2}-\d{2})\s*(\d{2}:\d{2}:\d{2}.\d+)\s*(\d+):\s*(\d+)\s*([IDEVW])\/(.*)\]$")
     log = None
 
     def __init__(self, _filter: LogFilter = None):
@@ -51,8 +50,8 @@ class LogMsgParser(object):
         if self.log and self._filter.is_filter(self.log):
             self.log.print_log()
 
-    def parser_head(self, msg):
-        match = self.PATTERN_HEAD.match(msg)
+    def parser_head(self, _msg):
+        match = self.PATTERN_HEAD.search(_msg)
         if match:
             return match.groups()
         else:

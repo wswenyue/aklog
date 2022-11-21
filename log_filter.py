@@ -18,11 +18,8 @@ class LogFilter(object):
                  _package: str = None,
                  _package_exclude: List[str] = None,
                  _is_package_all: bool = False,
-                 _tag: str = None,
                  _is_tag_exact: bool = False,
                  _is_tag_ignore_case: bool = True,
-                 _msg: str = None,
-                 _msg_format: IFormatContent = None,
                  _priority: str = None):
         """
          过滤
@@ -45,12 +42,37 @@ class LogFilter(object):
                 self._is_package_current = False
                 self._package = _package
                 self._package_exclude = _package_exclude
-        self._tag = _tag
         self._is_tag_exact = _is_tag_exact
         self._is_tag_ignore_case = _is_tag_ignore_case
-        self._msg = _msg
-        self._msg_format: Optional[IFormatContent] = _msg_format
+
         self._level = LogLevelHelper.level_code(_priority)
+        self._tags = []
+        self._msgs = []
+        self._msg_format: Optional[IFormatContent] = None
+
+    @property
+    def tags(self) -> List[str]:
+        return self._tags
+
+    @tags.setter
+    def tags(self, _tags: List[str] = None):
+        self._tags = _tags
+
+    @property
+    def msgs(self) -> List[str]:
+        return self._msgs
+
+    @msgs.setter
+    def msgs(self, _msgs: List[str] = None):
+        self._msgs = _msgs
+
+    @property
+    def msg_format(self) -> Optional[IFormatContent]:
+        return self._msg_format
+
+    @msg_format.setter
+    def msg_format(self, _msg_format: Optional[IFormatContent] = None):
+        self._msg_format = _msg_format
 
     def filter_package(self, package: str) -> bool:
         if self._is_package_all:
@@ -66,35 +88,32 @@ class LogFilter(object):
         return False
 
     def filter_tag(self, tag: str) -> bool:
-        if comm_tools.is_empty(self._tag):
+        if comm_tools.is_empty(self.tags):
             # 不做过滤
             return True
         if comm_tools.is_empty(tag):
             # 不匹配
             return False
-        if self._is_tag_exact:
-            # 精准匹配
-            if self._is_tag_ignore_case:
-                # 忽略大小写
-                return self._tag.lower() == tag.lower()
-            else:
-                return self._tag == tag
-        else:
-            # 模糊匹配
-            if self._is_tag_ignore_case:
-                # 忽略大小写
-                return self._tag.lower() in tag.lower()
-            else:
-                return self._tag in tag
+        for _tag in self.tags:
+            if comm_tools.match_str(_tag, tag,
+                                    is_exact=self._is_tag_exact,
+                                    is_ignore_case=self._is_tag_ignore_case):
+                return True
+
+        return False
 
     def filter_level(self, level: int) -> bool:
         return self._level <= level
 
     def filter_msg(self, msg: str) -> bool:
-        if comm_tools.is_empty(self._msg):
+        if comm_tools.is_empty(self.msgs):
             # 不做过滤
             return True
-        return self._msg in msg
+        for _msg in self.msgs:
+            if _msg in msg:
+                return True
+
+        return False
 
     def is_filter(self, log: LogInfo) -> bool:
         if not log:

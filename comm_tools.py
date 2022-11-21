@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Created by zhangwanxin on 2018/11/4.
+# Created by wswenyue on 2018/11/4.
 import os
 import platform
 import subprocess
@@ -89,3 +89,26 @@ def is_exe(fpath: str) -> bool:
     if not fpath:
         return False
     return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+
+def match_str(a: str, b: str, is_exact: bool = True, is_ignore_case: bool = False) -> bool:
+    """
+    a str match b str
+    :param a:
+    :param b:
+    :param is_exact: 精准匹配
+    :param is_ignore_case: 忽略大小写
+    :return: true:matched
+    """
+    if is_empty(a) or is_empty(b):
+        return False
+    if is_exact:
+        if is_ignore_case:
+            return a.lower() == b.lower()
+        else:
+            return a == b
+    else:
+        if is_ignore_case:
+            return a.lower() in b.lower()
+        else:
+            return a in b

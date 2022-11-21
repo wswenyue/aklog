@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Created by zhangwanxin on 2019/6/26.
+# Created by wswenyue on 2019/6/26.
 import re
 from queue import Queue
 

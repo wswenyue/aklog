@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Created by zhangwanxin on 2018/11/4.
+# Created by wswenyue on 2018/11/4.
 
 """
 同时设置背景和前景

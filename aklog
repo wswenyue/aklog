@@ -8,7 +8,9 @@ has(){
     type "$1" > /dev/null 2>&1
 }
 
-if has "python"; then
+if has "python3"; then
+	python3 ${AK_DIR}/aklog.py $@
+elif has "python"; then
 	python ${AK_DIR}/aklog.py $@
 else
 	echo >&2 "Failed to execute, please insatll python before."

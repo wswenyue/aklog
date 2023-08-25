@@ -3,10 +3,9 @@
 # Created by wswenyue on 2018/11/4.
 from typing import Optional
 
-import color_print
 import comm_tools
 from app_info import AppInfoHelper
-from format_content import IFormatContent
+from content_format import IFormatContent
 
 
 class LogLevelHelper(object):
@@ -66,7 +65,7 @@ class LogInfo(object):
         self._date = _date
         self._time = _time
         self._pid = _pid
-        self._tid = _pid
+        self._tid = _tid
         self._priority = _priority
         self._tag = _tag
         self._msg = None
@@ -75,6 +74,10 @@ class LogInfo(object):
     @property
     def tag(self) -> str:
         return self._tag
+
+    @property
+    def time(self) -> str:
+        return self._time
 
     @property
     def msg_format(self) -> Optional[IFormatContent]:
@@ -128,27 +131,14 @@ class LogInfo(object):
             # 主进程
             return name.split(".")[-1] + "@main"
 
+    def get_show_tid(self):
+        if self._pid == self._tid:
+            return self._tid
+        else:
+            return f"{self._tid}❗"
+
     def get_level(self):
         return LogLevelHelper.level_code(self._priority)
 
-    def print_log(self):
-        msg_content = self.get_format_msg_content()
-        if comm_tools.is_empty(msg_content):
-            return
-        if self._pid == self._tid:
-            tid_msg = self._tid
-        else:
-            tid_msg = f"{self._tid}❗"
-        msg = "{0}#{1}#{2}#{3}#{4}#{5}".format(self._time, self.get_show_name(),
-                                               tid_msg, self._priority, self._tag,
-                                               msg_content)
-        if self._priority == 'D':
-            color_print.green(msg)
-        elif self._priority == 'E':
-            color_print.red(msg)
-        elif self._priority == 'W':
-            color_print.yellow(msg)
-        elif self._priority == 'I':
-            color_print.light_blue(msg)
-        else:
-            print(msg)
+    def get_level_name(self):
+        return LogLevelHelper.level_name(self.get_level())

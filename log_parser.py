@@ -8,7 +8,7 @@ import re
 
 import color_print
 import comm_tools
-from log_filter import LogFilter
+from log_print_ctr import LogPrintCtr
 from log_info import LogInfo
 
 
@@ -18,8 +18,8 @@ class LogMsgParser(object):
     PATTERN_HEAD = re.compile(r"^\[\s*(\d{2}-\d{2})\s*(\d{2}:\d{2}:\d{2}.\d+)\s*(\d+):\s*(\d+)\s*([IDEVW])\/(.*)\]$")
     log = None
 
-    def __init__(self, _filter: LogFilter = None):
-        self._filter = _filter
+    def __init__(self, _log_printer: LogPrintCtr = None):
+        self._log_printer = _log_printer
 
     @staticmethod
     def _build_log_info(group) -> LogInfo:
@@ -37,7 +37,7 @@ class LogMsgParser(object):
         group = self.parser_head(msg)
         if group:
             if self.log:
-                self.print_logic()
+                self._log_printer.print(self.log)
                 self.log = None
             self.log = LogMsgParser._build_log_info(group)
         else:
@@ -45,10 +45,6 @@ class LogMsgParser(object):
                 self.log.append_msg_content(msg)
             else:
                 color_print.light_gray(">>>>" + str(msg).strip())
-
-    def print_logic(self):
-        if self.log and self._filter.is_filter(self.log):
-            self.log.print_log()
 
     def parser_head(self, _msg):
         match = self.PATTERN_HEAD.search(_msg)

@@ -81,17 +81,21 @@ class AdbHelper(object):
             return True
         raise ValueError("adb not connection!!! Please check!!!")
 
-    def run_cmd(self, cmd) -> str:
+    def run_cmd_result_code(self, cmd):
         self.check_connect()
         _cmd = f"{self._adb} {cmd}"
         if self._open_log:
             print(f"run {_cmd}")
         process = subprocess.Popen(str(_cmd).split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
-        if process.returncode:
+        return process.returncode, out, err
+
+    def run_cmd(self, cmd) -> str:
+        code, out, err = self.run_cmd_result_code(cmd)
+        if code:
             if self._open_log:
                 print(f"error: {err}")
-            raise subprocess.CalledProcessError(process.returncode, cmd)
+            raise subprocess.CalledProcessError(code, cmd)
         return get_str(out)
 
     def cmd_run_iter(self, cmd):

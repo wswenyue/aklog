@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 import threading
-from typing import Tuple
+from typing import Tuple, Iterable
 
 
 def is_empty(obj):
@@ -42,6 +42,10 @@ def get_str(obj):
         # return obj.decode("utf-8")
     else:
         return str(obj)
+
+
+def get_iterable(obj) -> Iterable:
+    return iter(obj)
 
 
 def cmd_run_iter(cmd):

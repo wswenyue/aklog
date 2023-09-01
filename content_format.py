@@ -22,7 +22,8 @@ class JsonValueFormat(IFormatContent):
     def __init__(self, _keys: List[str]):
         self._keys_reg = {}
         for _key in _keys:
-            self._keys_reg[_key] = re.compile(r'\\?"' + re.escape(_key) + r'\\?":\\?"(.*?)\\?"', re.M)
+            self._keys_reg[_key] = re.compile(r'\\?["\']?' + re.escape(_key) + r'\\?["\']?[:=]\\?["\'](.*?)\\?["\']',
+                                              re.M)
 
     @staticmethod
     def _reg_match(reg, msg: str) -> str:
@@ -43,7 +44,11 @@ class JsonValueFormat(IFormatContent):
                 break
         if not has_key:
             return None
-        ret: str = "👉 "
+        ret: str = ""
         for _key, reg in self._keys_reg.items():
-            ret += f"'{_key}':'{JsonValueFormat._reg_match(reg, _input)}'\t"
-        return ret
+            value = JsonValueFormat._reg_match(reg, _input)
+            if comm_tools.is_not_empty(value):
+                ret += f"'{_key}':'{value}'\t"
+        if comm_tools.is_empty(ret):
+            return None
+        return "👉 " + ret

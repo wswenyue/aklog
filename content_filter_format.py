@@ -79,11 +79,24 @@ class LogPackageFilterFormat(IBaseFilterFormat):
 
 class LogTagFilterFormat(IBaseFilterFormat):
 
-    def __init__(self, target: Optional[List[str]] = None, is_exact: bool = False):
+    def __init__(self, target: Optional[List[str]] = None,
+                 tag_not: Optional[List[str]] = None,
+                 is_exact: bool = False,
+                 is_tag_not_fuzzy: bool = False):
         self.is_exact = is_exact
         self.target = target
+        self.tag_not = tag_not
+        self.is_tag_not_fuzzy = is_tag_not_fuzzy
 
     def filter(self, tag: str) -> bool:
+        if self.tag_not:
+            if self.is_tag_not_fuzzy:
+                for tagN in self.tag_not:
+                    if tagN in tag:
+                        return False
+            else:
+                if tag.strip() in self.tag_not:
+                    return False
         if (self.target is None) or (len(self.target) <= 0):
             # 没有设置tag，既不需要匹配tag，全接受
             return True
@@ -97,8 +110,11 @@ class LogTagFilterFormat(IBaseFilterFormat):
 
 
 class LogMsgFilterFormat(IBaseFilterFormat):
-    def __init__(self, target: Optional[List[str]] = None, json_format: Optional[JsonValueFormat] = None):
+    def __init__(self, target: Optional[List[str]] = None,
+                 msg_not: Optional[List[str]] = None,
+                 json_format: Optional[JsonValueFormat] = None):
         self.target = target
+        self.msg_not = msg_not
         self.json_format = json_format
 
     def filter(self, msg: str) -> bool:
@@ -106,6 +122,10 @@ class LogMsgFilterFormat(IBaseFilterFormat):
         return True
 
     def format_content(self, _input: str) -> Optional[str]:
+        if self.msg_not:
+            for msgN in self.msg_not:
+                if msgN in _input:
+                    return None
         if self.json_format:
             return self.json_format.format_content(_input)
         if comm_tools.is_not_empty(self.target):

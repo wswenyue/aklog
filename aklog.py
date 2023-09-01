@@ -34,11 +34,14 @@ class AkLogArgs(object):
     dest_package = "package"
     dest_package_all = "package_all"
     dest_package_current_top = "package_current_top"
-    dest_package_exclude = "package_exclude"
+    dest_package_not = "package_not"
     dest_tag = "tag"
+    dest_tag_not = "tag_not"
+    dest_tag_not_fuzzy = "tag_not_fuzzy"
     dest_tag_case = "tag_case"
     dest_tag_exact = "tag_exact"
     dest_msg = "msg"
+    dest_msg_not = "msg_not"
     dest_msg_json_value = "msg_json_value"
     dest_level = "level"
     dest_cmd_screen_cap = "cmd_screen_cap"
@@ -50,15 +53,15 @@ class AkLogArgs(object):
     def _define_args_package(self, args_parser: argparse.ArgumentParser):
         args_package = args_parser.add_mutually_exclusive_group()
         args_package.add_argument('-pc', '--' + self.dest_package_current_top, dest=self.dest_package_current_top,
-                                  help='过滤当前前台Top应用包名的日志。不加任何包名过滤条件时默认是此条件',
+                                  help='匹配当前前台Top应用包名的日志。不加任何包名过滤条件时默认是此条件',
                                   action='store_true', default=True)
         args_package.add_argument("-pa", "--" + self.dest_package_all, dest=self.dest_package_all,
                                   help="不过滤，支持显示所有包名日志",
                                   action='store_true', default=False)
         args_package.add_argument('-p', '--' + self.dest_package, dest=self.dest_package,
-                                  help='过滤指定包名的日志，不需要填写完整包名，只要能区分即可',
+                                  help='匹配指定包名的日志，不需要填写完整包名，只要能区分即可',
                                   type=str, nargs='+')
-        args_package.add_argument('-pe', '--' + self.dest_package_exclude, dest=self.dest_package_exclude,
+        args_package.add_argument('-pn', '--' + self.dest_package_not, dest=self.dest_package_not,
                                   help='排除指定包名的日志，支持数组',
                                   type=str, nargs='+')
 
@@ -67,9 +70,9 @@ class AkLogArgs(object):
         if args[self.dest_package]:
             return LogPackageFilterFormat(PackageFilterType.TARGET,
                                           _to_str_arr(args[self.dest_package]))
-        elif args[self.dest_package_exclude]:
+        elif args[self.dest_package_not]:
             return LogPackageFilterFormat(PackageFilterType.EXCLUDE,
-                                          _to_str_arr(args[self.dest_package_exclude]))
+                                          _to_str_arr(args[self.dest_package_not]))
         elif args[self.dest_package_all]:
             return LogPackageFilterFormat(PackageFilterType.All)
         elif args[self.dest_package_current_top]:
@@ -79,53 +82,81 @@ class AkLogArgs(object):
             raise ValueError("package error!!")
 
     def _define_args_tag(self, args_parser: argparse.ArgumentParser):
+        args_tag_not_group = args_parser.add_mutually_exclusive_group()
+        args_tag_not_group.add_argument('-tnf', '--' + self.dest_tag_not_fuzzy, dest=self.dest_tag_not_fuzzy,
+                                        help='模糊匹配tag并过滤掉不显示, 支持数组 eg: -tnf tag1 tag2',
+                                        type=str, nargs='+')
+        args_tag_not_group.add_argument('-tn', '--' + self.dest_tag_not, dest=self.dest_tag_not,
+                                        help='匹配tag并过滤掉不显示, 支持数组 eg: -tn tag1 tag2',
+                                        type=str, nargs='+')
         args_tags = args_parser.add_mutually_exclusive_group()
         args_tags.add_argument('-t', '--' + self.dest_tag, dest=self.dest_tag,
-                               help='过滤tag, 支持数组 eg: -t tag1 tag2',
+                               help='匹配tag, 支持数组 eg: -t tag1 tag2',
                                type=str, nargs='+')
         args_tags.add_argument('-te', '--' + self.dest_tag_exact, dest=self.dest_tag_exact,
-                               help='过滤tag, 精准完全匹配, 支持数组 eg: -te tag1 tag2',
+                               help='匹配tag, 精准完全匹配, 支持数组 eg: -te tag1 tag2',
                                type=str, nargs='+')
 
     def _parser_args_tag(self, args: Dict[str, object]) -> LogTagFilterFormat:
+        tag_not_array = None
+        is_tag_not_fuzzy = False
+        if args[self.dest_tag_not]:
+            tag_not_array = _to_str_arr(args[self.dest_tag_not])
+            is_tag_not_fuzzy = False
+        elif args[self.dest_tag_not_fuzzy]:
+            tag_not_array = _to_str_arr(args[self.dest_tag_not_fuzzy])
+            is_tag_not_fuzzy = True
+        if comm_tools.is_empty(tag_not_array):
+            tag_not_array = None
         if args[self.dest_tag]:
-            return LogTagFilterFormat(_to_str_arr(args[self.dest_tag]), False)
+            return LogTagFilterFormat(target=_to_str_arr(args[self.dest_tag]), tag_not=tag_not_array,
+                                      is_exact=False, is_tag_not_fuzzy=is_tag_not_fuzzy)
         elif args[self.dest_tag_exact]:
-            return LogTagFilterFormat(_to_str_arr(args[self.dest_tag_exact]), True)
+            return LogTagFilterFormat(target=_to_str_arr(args[self.dest_tag_exact]), tag_not=tag_not_array,
+                                      is_exact=True, is_tag_not_fuzzy=is_tag_not_fuzzy)
         else:
             # 未设置，不做过滤
-            return LogTagFilterFormat()
+            return LogTagFilterFormat(tag_not=tag_not_array, is_tag_not_fuzzy=is_tag_not_fuzzy)
 
     def _define_args_msg(self, args_parser: argparse.ArgumentParser):
+        args_parser.add_argument('-mn', '--' + self.dest_msg_not, dest=self.dest_msg_not,
+                                 help='匹配日志内容关键词并过滤掉不显示，支持数组 eg: -mn msg1 msg2',
+                                 type=str, nargs='+')
         args_msg = args_parser.add_mutually_exclusive_group()
         args_msg.add_argument('-m', '--' + self.dest_msg, dest=self.dest_msg,
-                              help='过滤日志内容，支持数组 eg: -m msg1 msg2',
+                              help='匹配日志内容关键词，支持数组 eg: -m msg1 msg2',
                               type=str, nargs='+')
         args_msg.add_argument('-mjson', '--' + self.dest_msg_json_value, dest=self.dest_msg_json_value,
-                              help='匹配过滤日志内容中JSON结构的数据，并获取指定key的值。例如 -mjson keyA keyB '
+                              help='匹配日志内容中JSON结构的数据，并获取指定key的值。例如 -mjson keyA keyB '
                                    '将匹配带有"keyA"或"keyB"的json数据，并将对应的值解析出来',
                               type=str, nargs='+')
 
     def _parser_args_msg(self, args: Dict[str, object]) -> LogMsgFilterFormat:
+        msg_not_array = None
+        if args[self.dest_msg_not]:
+            _array = _to_str_arr(args[self.dest_msg_not])
+            if comm_tools.is_not_empty(_array):
+                msg_not_array = _array
         if args[self.dest_msg_json_value]:
             _array = _to_str_arr(args[self.dest_msg_json_value])
             if comm_tools.is_empty(_array):
                 raise ValueError("msg filter -mjson empty value!!")
             return LogMsgFilterFormat(
+                msg_not=msg_not_array,
                 json_format=JsonValueFormat(_keys=_array))
         elif args[self.dest_msg]:
             _array = _to_str_arr(args[self.dest_msg])
             if comm_tools.is_empty(_array):
                 raise ValueError("msg filter -m empty value!!")
-            return LogMsgFilterFormat(target=_array)
+            return LogMsgFilterFormat(target=_array, msg_not=msg_not_array)
         else:
             # 未设置，不做过滤
-            return LogMsgFilterFormat()
+            return LogMsgFilterFormat(msg_not=msg_not_array)
 
     # 日志级别
     def _define_args_level(self, args_parser: argparse.ArgumentParser):
         args_parser.add_argument('-l', '--' + self.dest_level, dest=self.dest_level,
-                                 help='过滤日志级别(V|v|2, D|d|3, I|i|4, W|w|5, E|e|6)',
+                                 help='匹配日志级别(V|v|2, D|d|3, I|i|4, W|w|5, E|e|6)',
                                  type=str,
                                  nargs=1)
 
@@ -168,7 +199,7 @@ class AkLogArgs(object):
 
     def _define_args(self) -> argparse.ArgumentParser:
         args_parser = argparse.ArgumentParser(
-            description="Android开发利器-AKLog (Android developer's Swiss Army Knife for Log)")
+            description=f"Android开发利器-AKLog-{self.AK_LOG_VERSION} (Android developer's Swiss Army Knife for Log)")
         args_parser.add_argument('-v', '--' + self.dest_version, action=self.dest_version, version=self.AK_LOG_VERSION)
         # package 相关参数
         self._define_args_package(args_parser)

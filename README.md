@@ -2,7 +2,7 @@
 
 Android developer's Swiss Army Knife for Log
 
-[示例](./res/demo.jpg)
+![示例](./res/demo.jpg)
 
 ### Installation
 

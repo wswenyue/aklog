@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Created by wswenyue on 2018/11/4.
-from typing import Optional
 
 import comm_tools
 from app_info import AppInfoHelper
-from content_format import IFormatContent
 
 
 class LogLevelHelper(object):
@@ -69,7 +67,6 @@ class LogInfo(object):
         self._priority = _priority
         self._tag = _tag
         self._msg = None
-        self._msg_format: Optional[IFormatContent] = None
 
     @property
     def tag(self) -> str:
@@ -78,14 +75,6 @@ class LogInfo(object):
     @property
     def time(self) -> str:
         return self._time
-
-    @property
-    def msg_format(self) -> Optional[IFormatContent]:
-        return self._msg_format
-
-    @msg_format.setter
-    def msg_format(self, _format: Optional[IFormatContent]):
-        self._msg_format = _format
 
     def append_msg_content(self, _content: str):
         if comm_tools.is_empty(_content):
@@ -106,12 +95,6 @@ class LogInfo(object):
             else:
                 _content += ("\n\t\t" + line)
         return _content.strip()
-
-    def get_format_msg_content(self):
-        if self.msg_format:
-            return self.msg_format.format_content(self.get_msg_content())
-        else:
-            return self.get_msg_content()
 
     def get_process_name(self):
         name = AppInfoHelper.found_name_by_pid(self._pid)

@@ -6,10 +6,11 @@
 """
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import comm_tools
 from app_info import AppInfoHelper
+from color_print import ColorStr
 from content_format import JsonValueFormat
 from log_info import LogLevelHelper
 
@@ -24,7 +25,7 @@ class IBaseFilterFormat(metaclass=ABCMeta):
         """
         pass
 
-    def format_content(self, _input: str) -> Optional[str]:
+    def format_content(self, _input: str) -> Optional[Union[str, ColorStr]]:
         if not self.filter(_input):
             # False 既过滤
             return None
@@ -121,7 +122,7 @@ class LogMsgFilterFormat(IBaseFilterFormat):
         # 不处理
         return True
 
-    def format_content(self, _input: str) -> Optional[str]:
+    def format_content(self, _input: str) -> Optional[Union[str, ColorStr]]:
         if self.msg_not:
             for msgN in self.msg_not:
                 if msgN in _input:

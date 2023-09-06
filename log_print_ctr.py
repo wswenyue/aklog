@@ -4,7 +4,7 @@
 @author:   wswenyue
 @date:     2022/11/10 
 """
-import color_print
+from color_print import ColorStrArr, SimpleColorStr, Colors, ColorStr
 from content_filter_format import LogPackageFilterFormat, LogTagFilterFormat, LogMsgFilterFormat, LogLevelFilterFormat
 from log_info import LogInfo, LogLevelHelper
 
@@ -68,19 +68,34 @@ class LogPrintCtr(object):
         p_tid = log.get_show_tid()
         p_time = log.time
         p_name = log.get_show_name()
-
-        msg = "{0}#{1}#{2}#{3}#{4}#{5}".format(p_time, p_name, p_tid, p_level, p_tag, p_msg)
-
+        # msg = "{0}#{1}#{2}#{3}#{4}#{5}".format(p_time, p_name, p_tid, p_level, p_tag, p_msg)
         level = log.get_level()
         if level == LogLevelHelper.DEBUG:
-            color_print.green(msg)
+            base_color = Colors.Green
+            tag_color = Colors.LightGreen
         elif level == LogLevelHelper.ERROR:
-            color_print.red(msg)
+            base_color = Colors.RED
+            tag_color = Colors.LightRed
         elif level == LogLevelHelper.WARN:
-            color_print.yellow(msg)
+            base_color = Colors.Yellow
+            tag_color = Colors.LightYellow
         elif level == LogLevelHelper.INFO:
-            color_print.light_blue(msg)
+            base_color = Colors.Blue
+            tag_color = Colors.LightBlue
         elif level == LogLevelHelper.VERBOSE:
-            color_print.light_gray(msg)
+            base_color = Colors.Gray
+            tag_color = Colors.LightGray
         else:
-            print(msg)
+            base_color = Colors.Gray
+            tag_color = Colors.LightGray
+        msg = ColorStrArr(base_color)
+        msg.add(SimpleColorStr("{0}#{1}#{2}".format(p_time, p_name, p_tid), Colors.Gray))
+        level_color = tag_color.copy()
+        level_color.style = "underline"
+        msg.add(ColorStr(f" {p_level} ", level_color))
+        msg.add(ColorStr(f"{p_tag}\t#", tag_color))
+        if isinstance(p_msg, ColorStr):
+            msg.add(p_msg)
+        else:
+            msg.add(ColorStr(p_msg, base_color))
+        print(str(msg))

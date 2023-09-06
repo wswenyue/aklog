@@ -10,7 +10,7 @@ import comm_tools
 class AsciiColor(object):
     fg_desc = {
         "black": 30, "red": 31, "green": 32, "yellow": 33, "blue": 34,
-        "purple": 35, "cyan": 36, "white": 37,
+        "purple": 35, "cyan": 36, "white": 37, "gray": 37,
         "highlight_black": 90, "light_black": 90, "hl_black": 90,
         "highlight_red": 91, "light_red": 91, "hl_red": 91,
         "highlight_green": 92, "light_green": 92, "hl_green": 92,
@@ -19,11 +19,12 @@ class AsciiColor(object):
         "highlight_purple": 95, "light_purple": 95, "hl_purple": 95,
         "highlight_cyan": 96, "light_cyan": 96, "hl_cyan": 96,
         "highlight_white": 97, "light_white": 97, "hl_white": 97,
+        "highlight_gray": 97, "light_gray": 97, "hl_gray": 97,
     }
 
     bg_desc = {
         "black": 40, "red": 41, "green": 42, "yellow": 43, "blue": 44,
-        "purple": 45, "cyan": 46, "white": 47,
+        "purple": 45, "cyan": 46, "white": 47, "gray": 47,
         "highlight_black": 100, "light_black": 100, "hl_black": 100,
         "highlight_red": 101, "light_red": 101, "hl_red": 101,
         "highlight_green": 102, "light_green": 102, "hl_green": 102,
@@ -32,6 +33,7 @@ class AsciiColor(object):
         "highlight_purple": 105, "light_purple": 105, "hl_purple": 105,
         "highlight_cyan": 106, "light_cyan": 106, "hl_cyan": 106,
         "highlight_white": 107, "light_white": 107, "hl_white": 107,
+        "highlight_gray": 107, "light_gray": 107, "hl_gray": 107,
     }
 
     style_desc = {"normal": 0, "none": 0, "bold": 1, "faint": 2, "italic": 3, "underline": 4,
@@ -55,6 +57,8 @@ class AsciiColor(object):
     def __str__(self):
         if self.style and self.fg and self.bg:
             return u'\u001b[' + ";".join([str(self.style), str(self.fg), str(self.bg)]) + 'm'
+        if self.fg and self.bg:
+            return u'\u001b[' + ";".join(["0", str(self.fg), str(self.bg)]) + 'm'
         if self.fg:
             if self.style:
                 return u'\u001b[' + f'{self.style};{self.fg}m'
@@ -135,6 +139,9 @@ class AsciiColor(object):
         else:
             self._fg = None
 
+    def copy(self):
+        return AsciiColor(style=self.style, fg=self.fg, bg=self.bg)
+
 
 class _ColorNode(object):
 
@@ -160,16 +167,26 @@ class ColorStr(object):
 
     def __init__(self, source: str, base_color: Optional[AsciiColor] = None):
         self._source = source
-        if not base_color:
-            base_color = Colors.NONE
         self._invalid = comm_tools.is_empty(source)
         self._base_color = base_color
         self._end_index = len(source)
-        self._nodes = [_ColorNode(0, color=base_color), _ColorNode(self._end_index, color=base_color)]
+        self._nodes = [_ColorNode(0, color=self.base_color), _ColorNode(self._end_index, color=self.base_color)]
 
     @property
     def source(self) -> str:
         return self._source
+
+    @property
+    def base_color(self) -> AsciiColor:
+        if self._base_color:
+            return self._base_color
+        else:
+            return Colors.NONE
+
+    @base_color.setter
+    def base_color(self, color: Optional[AsciiColor]):
+        if color:
+            self._base_color = color
 
     def _sort(self):
         self._nodes.sort(key=lambda _node: _node.index)
@@ -191,22 +208,19 @@ class ColorStr(object):
         return last
 
     def _merge_base_color(self, color: Optional[AsciiColor]) -> Optional[AsciiColor]:
-        if not self._base_color:
-            return color
         if not color:
             return color
-        if self._base_color.style and (not color.style):
-            color.style = self._base_color.style
-        if self._base_color.fg and (not color.fg):
-            color.fg = self._base_color.fg
-        if self._base_color.bg and (not color.bg):
-            color.bg = self._base_color.bg
+        if self.base_color.style and (not color.style):
+            color.style = self.base_color.style
+        if self.base_color.fg and (not color.fg):
+            color.fg = self.base_color.fg
+        if self.base_color.bg and (not color.bg):
+            color.bg = self.base_color.bg
         return color
 
-    def set_color(self, begin: int, end: int, _color: AsciiColor):
+    def set_color(self, begin: int, end: int, color: AsciiColor):
         if self._invalid:
             return self
-        color = self._merge_base_color(_color)
         if not color:
             return self
         if begin < 0:
@@ -232,7 +246,10 @@ class ColorStr(object):
         if begin_node.index < 0 or end > self._end_index or begin_node.index >= end:
             raise ValueError(f"_format_sub error begin:{begin_node.index};;end:{end}")
         if begin_node.color:
-            return begin_node.color.format(self.source[begin_node.index: end])
+            _color = self._merge_base_color(begin_node.color)
+            if not _color:
+                raise ValueError(f"_format_sub color is null!!!")
+            return _color.format(self.source[begin_node.index: end])
         return self.source[begin_node.index: end]
 
     def __str__(self) -> str:
@@ -252,18 +269,58 @@ class ColorStr(object):
         return ret
 
 
+class SimpleColorStr(object):
+    def __init__(self, data: str, color: AsciiColor):
+        self.data = data
+        self.color = color
+
+    def __str__(self):
+        return self.color.format(self.data)
+
+
+class ColorStrArr(object):
+    def __init__(self, base_color: Optional[AsciiColor] = None):
+        self._base_color = base_color
+        self._cs_arr: List[Union[str, ColorStr, SimpleColorStr]] = []
+
+    @property
+    def base_color(self) -> Optional[AsciiColor]:
+        return self._base_color
+
+    @base_color.setter
+    def base_color(self, color: Optional[AsciiColor]):
+        if color:
+            self._base_color = color
+
+    def add(self, cs: Union[str, ColorStr, SimpleColorStr]):
+        if cs:
+            self._cs_arr.append(cs)
+
+    def __str__(self) -> str:
+        ret = ''
+        for cs in self._cs_arr:
+            if self.base_color and isinstance(cs, ColorStr):
+                cs.base_color = self.base_color
+            ret += str(cs)
+        return ret
+
+
 class Colors(object):
     NONE = AsciiColor()
     RED = AsciiColor(fg="red")
+    LightRed = AsciiColor(fg="light_red")
     Green = AsciiColor(fg="green")
-    Blue = AsciiColor(fg="blue")
+    LightGreen = AsciiColor(fg="light_green")
     Black = AsciiColor(fg="black")
     Purple = AsciiColor(fg="purple")
     Cyan = AsciiColor(fg="cyan")
     LightCyan = AsciiColor(fg="light_cyan")
+    Gray = AsciiColor(fg="gray")
     LightGray = AsciiColor(fg="light_gray")
+    Blue = AsciiColor(fg="blue")
     LightBlue = AsciiColor(fg="light_blue")
     Yellow = AsciiColor(fg="yellow")
+    LightYellow = AsciiColor(fg="light_yellow")
 
     @staticmethod
     def print_color_table():
@@ -314,7 +371,7 @@ def black(msg):
 
 if __name__ == '__main__':
     # 打印色表
-    Colors.print_color_table()
+    # Colors.print_color_table()
     # log()
     target = ColorStr("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。", base_color=Colors.LightCyan)
     target.set_color(3, 10, Colors.Green)
@@ -330,8 +387,8 @@ if __name__ == '__main__':
     print(AsciiColor(fg="light_gray").format("11:01:34.321#bang@main#22943❗#")
           + AsciiColor(fg="green", style="underline").format("D")
           + AsciiColor(fg="light_green").format("#ZLogDebug(TraceDataDBMgr)#")
-          + str(ColorStr("upload msg list is empty!!!", base_color=AsciiColor(fg="green"))
+          + str(ColorStr("upload msg list is empty!!!", base_color=AsciiColor(fg="green", style="italic"))
                 .set_color(5, 10, AsciiColor(style="underline", bg="black"))
-                .set_color(10, 15, AsciiColor(bg=40, fg=31, style=0))
+                .set_color(10, 15, AsciiColor(style="crossed"))
                 )
           )

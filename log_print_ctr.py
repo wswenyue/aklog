@@ -93,7 +93,7 @@ class LogPrintCtr(object):
         level_color = tag_color.copy()
         level_color.style = "underline"
         msg.add(ColorStr(f" {p_level} ", level_color))
-        msg.add(ColorStr(f"{p_tag}\t#", tag_color))
+        msg.add(ColorStr(f"{p_tag}#", tag_color))
         if isinstance(p_msg, ColorStr):
             msg.add(p_msg)
         else:

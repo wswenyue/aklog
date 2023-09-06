@@ -29,7 +29,7 @@ def _to_str_arr(obj: Any) -> List[str]:
 
 
 class AkLogArgs(object):
-    AK_LOG_VERSION = "v5.0.1"
+    AK_LOG_VERSION = "v5.0.3"
     dest_version = "version"
     dest_package = "package"
     dest_package_all = "package_all"

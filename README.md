@@ -15,6 +15,8 @@ If you need to update，Run the command:
 
 ```shell
 $ brew upgrade aklog
+# or
+$ brew untap wswenyue/aklog && brew tap wswenyue/aklog && brew install aklog
 ```
 
 ### How to use

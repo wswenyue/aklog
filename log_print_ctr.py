@@ -89,11 +89,11 @@ class LogPrintCtr(object):
             base_color = Colors.Gray
             tag_color = Colors.LightGray
         msg = ColorStrArr(base_color)
-        msg.add(SimpleColorStr("{0}#{1}#{2}".format(p_time, p_name, p_tid), Colors.Gray))
+        msg.add(SimpleColorStr("{0}#{1}#{2}#".format(p_time, p_name, p_tid), Colors.Gray))
         level_color = tag_color.copy()
         level_color.style = "underline"
-        msg.add(ColorStr(f" {p_level} ", level_color))
-        msg.add(ColorStr(f"{p_tag}#", tag_color))
+        msg.add(ColorStr(f"{p_level}", level_color))
+        msg.add(ColorStr(f"#{p_tag}#", tag_color))
         if isinstance(p_msg, ColorStr):
             msg.add(p_msg)
         else:

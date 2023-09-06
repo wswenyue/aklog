@@ -13,13 +13,15 @@ from adb_utils import AdbHelper
 
 
 class PhoneRecordVideo(object):
+    DEF_PATH_FILE_NAME = "AkRVideo"
     isDoExitWork = False
 
     def __init__(self, _dir: str = None):
         self.videoName = "R" + time.strftime("%m%d%H%M%S", time.localtime()) + ".mp4"
         self.phone_video = "/sdcard/" + self.videoName
         if comm_tools.is_empty(_dir):
-            self.phone_save_path = os.path.join(comm_tools.get_user_desktop_dir("RVideo/"), self.videoName)
+            self.phone_save_path = os.path.join(comm_tools.get_user_desktop_dir(f"{self.DEF_PATH_FILE_NAME}/"),
+                                                self.videoName)
         else:
             self.phone_save_path = os.path.join(_dir, self.videoName)
         comm_tools.create_dir_not_exists(self.phone_save_path)

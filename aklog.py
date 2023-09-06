@@ -16,7 +16,7 @@ from content_format import JsonValueFormat
 from log_info import LogLevelHelper
 from log_parser import LogMsgParser
 from log_print_ctr import LogPrintCtr
-from phone_record_video_tools import RecordHelper
+from phone_record_video_tools import RecordHelper, PhoneRecordVideo
 from screen_cap_tools import ScreenCapTools
 
 
@@ -47,8 +47,8 @@ class AkLogArgs(object):
     dest_cmd_screen_cap = "cmd_screen_cap"
     dest_cmd_record_video = "cmd_record_video"
     # 默认值
-    def_cmd_screen_cap_path = "~/Desktop/AkScreen/"
-    def_cmd_record_video_path = "~/Desktop/AkRVideo/"
+    def_cmd_screen_cap_path = f"~/Desktop/{ScreenCapTools.DEF_PATH_FILE_NAME}/"
+    def_cmd_record_video_path = f"~/Desktop/{PhoneRecordVideo.DEF_PATH_FILE_NAME}/"
 
     def _define_args_package(self, args_parser: argparse.ArgumentParser):
         args_package = args_parser.add_mutually_exclusive_group()

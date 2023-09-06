@@ -1,5 +1,8 @@
 # aklog
+
 Android developer's Swiss Army Knife for Log
+
+[示例](./res/demo.jpg)
 
 ### Installation
 
@@ -16,7 +19,7 @@ If you need to update，Run the command:
 ```shell
 $ brew upgrade aklog
 # or
-$ brew untap wswenyue/aklog && brew tap wswenyue/aklog && brew install aklog
+$ brew uninstall aklog && brew untap wswenyue/aklog && brew tap wswenyue/aklog && brew install aklog
 ```
 
 ### How to use

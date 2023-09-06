@@ -136,68 +136,6 @@ class AsciiColor(object):
             self._fg = None
 
 
-class Colors(object):
-    NONE = AsciiColor()
-    RED = AsciiColor(fg="red")
-    Green = AsciiColor(fg="green")
-    Blue = AsciiColor(fg="blue")
-    Black = AsciiColor(fg="black")
-    Purple = AsciiColor(fg="purple")
-    Cyan = AsciiColor(fg="cyan")
-    LightCyan = AsciiColor(fg="light_cyan")
-    LightGray = AsciiColor(fg="light_gray")
-    LightBlue = AsciiColor(fg="light_blue")
-    Yellow = AsciiColor(fg="yellow")
-
-
-def red(msg):
-    print(Colors.RED.format(msg))
-
-
-def green(msg):
-    print(Colors.Green.format(msg))
-
-
-def yellow(msg):
-    print(Colors.Yellow.format(msg))
-
-
-def light_blue(msg):
-    print(Colors.LightBlue.format(msg))
-
-
-def purple(msg):
-    print(Colors.Purple.format(msg))
-
-
-def cyan(msg):
-    print(Colors.Cyan.format(msg))
-
-
-def light_gray(msg):
-    print(Colors.LightGray.format(msg))
-
-
-def black(msg):
-    print(Colors.Black.format(msg))
-
-
-def print_format_table():
-    """
-    prints table of formatted text format options
-    """
-    for style in range(8):
-        for fg in range(30, 38):
-            s1 = ''
-            for bg in range(40, 48):
-                _format = ';'.join([str(style), str(fg), str(bg)])
-                # print(_format)
-                # s1 += '\x1b[%sm %s \x1b[0m' % (_format, _format)
-                s1 += AsciiColor(style=style, fg=fg, bg=bg).format(_format)
-            print(s1)
-        print('\n')
-
-
 class _ColorNode(object):
 
     def __init__(self, index: int, color: AsciiColor):
@@ -252,11 +190,25 @@ class ColorStr(object):
                 break
         return last
 
-    def set_color(self, begin: int, end: int, color: AsciiColor):
-        if self._invalid:
-            return
+    def _merge_base_color(self, color: Optional[AsciiColor]) -> Optional[AsciiColor]:
+        if not self._base_color:
+            return color
         if not color:
-            return
+            return color
+        if self._base_color.style and (not color.style):
+            color.style = self._base_color.style
+        if self._base_color.fg and (not color.fg):
+            color.fg = self._base_color.fg
+        if self._base_color.bg and (not color.bg):
+            color.bg = self._base_color.bg
+        return color
+
+    def set_color(self, begin: int, end: int, _color: AsciiColor):
+        if self._invalid:
+            return self
+        color = self._merge_base_color(_color)
+        if not color:
+            return self
         if begin < 0:
             begin = 0
         if end > self._end_index:
@@ -274,6 +226,7 @@ class ColorStr(object):
         # add endNode
         self._nodes.append(_ColorNode(end, left.color))
         self._sort()
+        return self
 
     def _format_sub(self, begin_node: _ColorNode, end: int) -> str:
         if begin_node.index < 0 or end > self._end_index or begin_node.index >= end:
@@ -282,10 +235,10 @@ class ColorStr(object):
             return begin_node.color.format(self.source[begin_node.index: end])
         return self.source[begin_node.index: end]
 
-    def __str__(self):
+    def __str__(self) -> str:
         ret = None
         if self._invalid:
-            return ret
+            return ''
         node_size = len(self._nodes)
         for idx, node in enumerate(self._nodes):
             if idx <= 0:
@@ -299,9 +252,69 @@ class ColorStr(object):
         return ret
 
 
+class Colors(object):
+    NONE = AsciiColor()
+    RED = AsciiColor(fg="red")
+    Green = AsciiColor(fg="green")
+    Blue = AsciiColor(fg="blue")
+    Black = AsciiColor(fg="black")
+    Purple = AsciiColor(fg="purple")
+    Cyan = AsciiColor(fg="cyan")
+    LightCyan = AsciiColor(fg="light_cyan")
+    LightGray = AsciiColor(fg="light_gray")
+    LightBlue = AsciiColor(fg="light_blue")
+    Yellow = AsciiColor(fg="yellow")
+
+    @staticmethod
+    def print_color_table():
+        """
+        prints table of formatted text format options
+        """
+        for style in range(10):
+            for fg in [*range(30, 38), *range(90, 98)]:
+                s1 = ''
+                for bg in [*range(40, 48), *range(100, 108)]:
+                    _format = ';'.join([str(style), str(fg), str(bg)])
+                    s1 += AsciiColor(style=style, fg=fg, bg=bg).format(_format) + " "
+                print(s1)
+            print('\n')
+
+
+def red(msg):
+    print(Colors.RED.format(msg))
+
+
+def green(msg):
+    print(Colors.Green.format(msg))
+
+
+def yellow(msg):
+    print(Colors.Yellow.format(msg))
+
+
+def light_blue(msg):
+    print(Colors.LightBlue.format(msg))
+
+
+def purple(msg):
+    print(Colors.Purple.format(msg))
+
+
+def cyan(msg):
+    print(Colors.Cyan.format(msg))
+
+
+def light_gray(msg):
+    print(Colors.LightGray.format(msg))
+
+
+def black(msg):
+    print(Colors.Black.format(msg))
+
+
 if __name__ == '__main__':
     # 打印色表
-    # print_format_table()
+    Colors.print_color_table()
     # log()
     target = ColorStr("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。", base_color=Colors.LightCyan)
     target.set_color(3, 10, Colors.Green)
@@ -313,3 +326,12 @@ if __name__ == '__main__':
     yellow("黄河入海流")
     purple("欲穷千里目")
     light_blue("更上一层楼")
+    # 11:01:34.321#bangjob@main#22943❗#D#ZLogDebug(ZCMTraceDataDBMgr) #upload msg list is empty!!!
+    print(AsciiColor(fg="light_gray").format("11:01:34.321#bang@main#22943❗#")
+          + AsciiColor(fg="green", style="underline").format("D")
+          + AsciiColor(fg="light_green").format("#ZLogDebug(TraceDataDBMgr)#")
+          + str(ColorStr("upload msg list is empty!!!", base_color=AsciiColor(fg="green"))
+                .set_color(5, 10, AsciiColor(style="underline", bg="black"))
+                .set_color(10, 15, AsciiColor(bg=40, fg=31, style=0))
+                )
+          )

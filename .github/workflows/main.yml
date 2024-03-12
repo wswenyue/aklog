@@ -49,7 +49,7 @@ jobs:
           echo "========0=======" >> $GITHUB_STEP_SUMMARY
           #          cat .github/data/aklog.rb >> $GITHUB_STEP_SUMMARY
           echo "========1=======" >> $GITHUB_STEP_SUMMARY
-          sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > formula.txt
+          sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > formula.rb
           echo "========2=======" >> $GITHUB_STEP_SUMMARY
           echo "========3=======" >> $GITHUB_STEP_SUMMARY
 
@@ -57,10 +57,39 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: formula
-          path: formula.txt
+          path: formula.rb
+  #
+  #      - name: print formula
+  #        run: |
+  #          echo "======end======" >> $GITHUB_STEP_SUMMARY
+  #  #          echo $formula >> $GITHUB_STEP_SUMMARY
+  #  #          echo "============" >> $GITHUB_STEP_SUMMARY
 
-      - name: print formula
+  homebrew:
+    name: publish homebrew
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private tools
+        uses: actions/checkout@v4
+        with:
+          repository: wswenyue/homebrew-aklog
+          #            token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
+          path: Formula
+      - name: Download formula
+        uses: actions/download-artifact@v4
+        with:
+          name: formula
+      - shell: bash
         run: |
-          echo "======end======" >> $GITHUB_STEP_SUMMARY
-#          echo $formula >> $GITHUB_STEP_SUMMARY
-#          echo "============" >> $GITHUB_STEP_SUMMARY
+          echo "save data to aklog.rb"
+          cat formula.rb > aklog.rb
+      - name: Commit files
+        run: |
+          git config --local user.email "github-actions@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git commit -a -m "Add changes"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

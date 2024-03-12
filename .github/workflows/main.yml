@@ -41,7 +41,9 @@ jobs:
         run: |
           url="https://github.com/wswenyue/aklog/archive/${NEW_TAG}.tar.gz"
           sha256=$(wget -O aklog.tar.gz ${url} && shasum -a 256 aklog.tar.gz | cut -d ' ' -f 1)
+          echo "url==>${url}"
+          echo "sha256==>${sha256}"
           rm -rf ./aklog.tar.gz
-          sed "s/#_url_#/${url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > .github/data/aklog.rb
+          sed -e "s/#_url_#/${url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > .github/data/aklog.rb
           content=$(cat .github/data/aklog.rb)
           echo $content

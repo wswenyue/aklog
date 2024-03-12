@@ -45,6 +45,6 @@ jobs:
           echo "sha256==>${sha256}" >> $GITHUB_STEP_SUMMARY
           rm -rf ./aklog.tar.gz
           en_url=`echo $url |sed 's#\/#\\\/#g'`
-          sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > .github/data/aklog.rb
+          sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb |tee .github/data/aklog.rb
           content=$(cat .github/data/aklog.rb)
           echo $content >> $GITHUB_STEP_SUMMARY

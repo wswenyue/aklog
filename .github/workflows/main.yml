@@ -101,9 +101,11 @@ jobs:
           ls -alh
           git status
           git commit -a -m "Add changes"
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          repository: wswenyue/homebrew-aklog
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+          git push origin master
+          echo "succeed."
+#      - name: Push changes
+#        uses: ad-m/github-push-action@master
+#        with:
+#          repository: wswenyue/homebrew-aklog
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          branch: ${{ github.ref }}

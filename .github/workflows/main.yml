@@ -36,3 +36,8 @@ jobs:
           git config user.email "github-actions@users.noreply.github.com"
           git tag $NEW_TAG
           git push origin $NEW_TAG
+
+      - name: read formula config file
+        run: |
+          content=$(cat .github/data/aklog.rb)
+          echo $content

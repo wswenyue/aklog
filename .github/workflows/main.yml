@@ -39,12 +39,15 @@ jobs:
 
       - name: read formula config file
         run: |
+          echo "pwd==>$(pwd)<==" >> $GITHUB_STEP_SUMMARY
           url="https://github.com/wswenyue/aklog/archive/${NEW_TAG}.tar.gz"
           sha256=$(wget -O aklog.tar.gz ${url} && shasum -a 256 aklog.tar.gz | cut -d ' ' -f 1)
           echo "url==>${url}" >> $GITHUB_STEP_SUMMARY
           echo "sha256==>${sha256}" >> $GITHUB_STEP_SUMMARY
           rm -rf ./aklog.tar.gz
           en_url=`echo $url |sed 's#\/#\\\/#g'`
+          echo "========0=======" >> $GITHUB_STEP_SUMMARY
+          cat .github/data/aklog.rb >> $GITHUB_STEP_SUMMARY
           echo "========1=======" >> $GITHUB_STEP_SUMMARY
           sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb |tee .github/data/aklog.rb
           echo "========2=======" >> $GITHUB_STEP_SUMMARY

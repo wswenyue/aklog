@@ -49,18 +49,15 @@ jobs:
           echo "========0=======" >> $GITHUB_STEP_SUMMARY
           #          cat .github/data/aklog.rb >> $GITHUB_STEP_SUMMARY
           echo "========1=======" >> $GITHUB_STEP_SUMMARY
-          formula=$(sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb)
-          echo "formula: ${formula}"
-          echo $formula > formula.rb
+          sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > formula.txt
           echo "========2=======" >> $GITHUB_STEP_SUMMARY
-          echo $formula >> $GITHUB_STEP_SUMMARY
           echo "========3=======" >> $GITHUB_STEP_SUMMARY
 
       - name: upload new Formula
         uses: actions/upload-artifact@v4
         with:
           name: formula
-          path: formula.rb
+          path: formula.txt
 
       - name: print formula
         run: |

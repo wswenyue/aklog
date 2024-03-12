@@ -13,6 +13,7 @@ from adb_utils import AdbCmd
 
 class ScreenCapTools(object):
     DEF_PATH_FILE_NAME = "AkScreen"
+    def_screen_cap_path = f"~/Desktop/{DEF_PATH_FILE_NAME}/"
 
     def __init__(self, _dir: str = None):
         if comm_tools.is_empty(_dir):

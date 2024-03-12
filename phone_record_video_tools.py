@@ -14,6 +14,7 @@ from adb_utils import AdbHelper
 
 class PhoneRecordVideo(object):
     DEF_PATH_FILE_NAME = "AkRVideo"
+    def_record_video_path = f"~/Desktop/{DEF_PATH_FILE_NAME}/"
     isDoExitWork = False
 
     def __init__(self, _dir: str = None):

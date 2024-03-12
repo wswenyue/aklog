@@ -13,10 +13,11 @@ from comm_tools import get_str
 from content_filter_format import LogPackageFilterFormat, PackageFilterType, LogTagFilterFormat, LogMsgFilterFormat, \
     LogLevelFilterFormat
 from content_format import JsonValueFormat
+from dump_crash_log_tools import DumpCrashLog
 from log_info import LogLevelHelper
 from log_parser import LogMsgParser
 from log_print_ctr import LogPrintCtr
-from phone_record_video_tools import RecordHelper, PhoneRecordVideo
+from phone_record_video_tools import PhoneRecordVideo, RecordHelper
 from screen_cap_tools import ScreenCapTools
 
 
@@ -29,7 +30,7 @@ def _to_str_arr(obj: Any) -> List[str]:
 
 
 class AkLogArgs(object):
-    AK_LOG_VERSION = "v5.0.4"
+    AK_LOG_VERSION = "v5.1.0"
     dest_version = "version"
     dest_package = "package"
     dest_package_all = "package_all"
@@ -46,9 +47,9 @@ class AkLogArgs(object):
     dest_level = "level"
     dest_cmd_screen_cap = "cmd_screen_cap"
     dest_cmd_record_video = "cmd_record_video"
+    dest_cmd = "cmd"
     # 默认值
-    def_cmd_screen_cap_path = f"~/Desktop/{ScreenCapTools.DEF_PATH_FILE_NAME}/"
-    def_cmd_record_video_path = f"~/Desktop/{PhoneRecordVideo.DEF_PATH_FILE_NAME}/"
+    cmd_name_define: Dict[str, List[str]] = {}
 
     def _define_args_package(self, args_parser: argparse.ArgumentParser):
         args_package = args_parser.add_mutually_exclusive_group()
@@ -170,32 +171,52 @@ class AkLogArgs(object):
             return LogLevelFilterFormat()
 
     def _define_args_cmd(self, args_parser: argparse.ArgumentParser):
-        args_cmd = args_parser.add_mutually_exclusive_group()
-        args_cmd.add_argument("-cs", "--" + self.dest_cmd_screen_cap, dest=self.dest_cmd_screen_cap,
-                              help=f"命令：获取当前手机截屏，并保持到(传入的)指定位置，默认位置是：${self.def_cmd_screen_cap_path}",
-                              type=str, nargs='?', const="null")
-        args_cmd.add_argument("-cr", "--" + self.dest_cmd_record_video, dest=self.dest_cmd_record_video,
-                              help=f"命令：开始录制当前手机视频，并保持到(传入的)指定位置，默认位置是：${self.def_cmd_record_video_path}",
-                              type=str, nargs='?', const="null")
+        comm_cmd = args_parser.add_subparsers(dest=self.dest_cmd, title="常用命令", description="快捷执行常用的命令",
+                                              help="常用命令使用说明")
+        cap = comm_cmd.add_parser('cap-screen', aliases=['cs'], help="获取当前手机截屏")
+        self.cmd_name_define['cap-screen'] = ['cap-screen', 'cs']
+        cap.add_argument('-path', type=str,
+                         help=f"命令：获取当前手机截屏，并保持到(传入的)指定位置，默认位置是：${ScreenCapTools.def_screen_cap_path}")
+
+        record = comm_cmd.add_parser('record-video', aliases=['rv'], help="录制当前手机屏幕")
+        self.cmd_name_define['record-video'] = ['record-video', 'rv']
+        record.add_argument('-path', type=str,
+                            help=f"命令：录制当前手机视频，并保存到(传入的)指定位置。默认位置是：${PhoneRecordVideo.def_record_video_path}")
+
+        dump = comm_cmd.add_parser('dump-log', aliases=['dump'], help="dump app(或native) 崩溃日志")
+        self.cmd_name_define['dump-log'] = ['dump-log', 'dump']
+        dump.add_argument('-type', type=int, default=0, help="打印日志类型[0:app日志；1:native日志]，默认是打印app日志")
+        dump.add_argument('-maxsize', type=int, default=10, help="最多打印的日志数量")
+        dump.add_argument('-path', type=str,
+                          help=f"dump app 崩溃日志，并保持到(传入的)指定位置，默认位置是：${DumpCrashLog.DEF_PATH}")
 
     def _parser_run_cmd(self, args: Dict[str, object]) -> bool:
-        # screenCap
-        if args[self.dest_cmd_screen_cap]:
-            _dir = comm_tools.get_str(args[self.dest_cmd_screen_cap])
+        cmd = args[self.dest_cmd]
+        if comm_tools.is_empty(cmd):
+            return False
+        if cmd in self.cmd_name_define['cap-screen']:
+            _dir = comm_tools.get_str(args['path'])
             if _dir == 'null':
                 _dir = None
             ScreenCapTools(_dir).do_capture()
             return True
-
-        # record video
-        if args[self.dest_cmd_record_video]:
-            _dir = comm_tools.get_str(args[self.dest_cmd_record_video])
+        if cmd in self.cmd_name_define['record-video']:
+            _dir = comm_tools.get_str(args['path'])
             if _dir == 'null':
                 _dir = None
             RecordHelper.do_work(_dir)
             return True
+        if cmd in self.cmd_name_define['dump-log']:
+            _dir = comm_tools.get_str(args['path'])
+            if _dir == 'null':
+                _dir = None
+            _type = comm_tools.to_int(args['type'])
+            _maxsize = comm_tools.to_int(args['maxsize'])
+            DumpCrashLog(is_ndk=_type != 0, dir=_dir, max_size=_maxsize).do_work()
+            return True
 
-        return False
+        print(f"exe failure==>{cmd}")
+        return True
 
     def _define_args(self) -> argparse.ArgumentParser:
         args_parser = argparse.ArgumentParser(
@@ -244,6 +265,7 @@ class AkLogArgs(object):
 
     def run(self, argv: Optional[List] = None):
         args_parser = self._define_args()
+        # args_parser.print_help()
         args = args_parser.parse_args(args=argv)
         args_var: dict[str, Any] = vars(args)
         if self._parser_run_cmd(args_var):

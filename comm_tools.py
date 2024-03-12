@@ -4,6 +4,7 @@
 import errno
 import os
 import platform
+import shutil
 import subprocess
 import sys
 
@@ -21,9 +22,13 @@ def is_empty(obj):
             return True
         elif obj.strip() == "":
             return True
+        else:
+            return False
     if type(obj) is list:
         if len(obj) <= 0:
             return True
+        else:
+            return False
     if type(obj) is dict:
         return bool(obj)
     else:
@@ -34,7 +39,7 @@ def is_not_empty(obj):
     return not is_empty(obj)
 
 
-def get_str(obj):
+def get_str(obj) -> str:
     if type(obj) is str:
         return obj
     elif type(obj) is bytes:
@@ -42,6 +47,17 @@ def get_str(obj):
         # return obj.decode("utf-8")
     else:
         return str(obj)
+
+
+def to_str(obj) -> str:
+    return get_str(obj)
+
+
+def to_int(obj) -> int:
+    if type(obj) is int:
+        return obj
+    else:
+        return int(obj)
 
 
 def get_iterable(obj) -> Iterable:
@@ -151,3 +167,132 @@ def match_str(a: str, b: str, is_exact: bool = True, is_ignore_case: bool = Fals
             return a.lower() in b.lower()
         else:
             return a in b
+
+
+def read_file_line_iter(file_path):
+    with open(file_path) as fp:
+        if not fp:
+            return None
+        for line in fp:
+            yield line
+
+
+def read_file_lines(file_path):
+    with open(file_path) as fp:
+        if fp:
+            return fp.readlines()
+        return None
+
+
+def write_to_file_no_error(str_data, file_path):
+    create_dir_not_exists(file_path)
+    write_to_file(str_data, file_path)
+
+
+def write_to_file_iterable(obj, file_path):
+    if is_file_exists(file_path):
+        print("the file %s exists!!!" % file_path)
+        return
+    create_dir_not_exists(file_path)
+    if not isinstance(obj, Iterable):
+        return
+    with open(file_path, "w") as f:
+        if f:
+            for line in obj:
+                f.write(line + "\n")
+
+
+def __write_to_file(name, msg, mode=None):
+    with open(name, mode) as f:
+        f.write(msg)
+
+
+def write_to_file(str_data, file_path):
+    """
+    写文件
+    :param str_data:
+    :param file_path:
+    :return:
+    """
+    __write_to_file(file_path, str_data, 'w')
+
+
+def write_to_file_add(str_data, file_path):
+    """
+    写文件，以追加的形式
+    :param str_data:
+    :param file_path:
+    :return:
+    """
+    __write_to_file(file_path, str_data, 'a')
+
+
+def create_file_not_exists(path):
+    """
+    Create a file regardless of  the father dir not exists
+    :param path:
+    :return:
+    """
+    if os.path.exists(path):
+        return
+    dir_path = os.path.dirname(path)
+    create_dir_not_exists(dir_path)
+    open(path, "w").close()
+
+
+def is_file_exists(path):
+    """
+    the file path exists and the file is a file not dir
+    :param path:
+    :return:
+    """
+    return os.path.isfile(path)
+
+
+def is_dir_exists(path):
+    """
+    check dir exists
+    :param path:
+    :return:
+    """
+    return os.path.isdir(path)
+
+
+def remove_file(path):
+    """
+    remove this file
+    :param path: file path
+    :return:
+    """
+    if not os.path.exists(path):
+        return
+    if os.path.isfile(path):
+        os.remove(path)  # remove the file
+    elif os.path.isdir(path):
+        shutil.rmtree(path)  # remove dir and all contains
+
+
+def get_cur_path(file_name):
+    return os.getcwd() + os.sep + file_name
+
+
+def get_path_dir(path):
+    _dir = os.path.dirname(path)
+    if _dir[len(_dir) - 1] != os.sep:
+        _dir += os.sep
+    return _dir
+
+
+def get_path_file_name(path):
+    return os.path.basename(path)
+
+
+def get_file_extension(file_path):
+    """
+    获取文件的扩展名
+    :param file_path: 文件名或者文件路径
+    :return:扩展名 eg:tar.gz;zip;9.png;png ...
+    """
+    base_name = os.path.basename(file_path)
+    print(base_name)
+    return base_name[base_name.index(".") + 1:]

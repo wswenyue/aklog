@@ -44,6 +44,7 @@ jobs:
           echo "url==>${url}"
           echo "sha256==>${sha256}"
           rm -rf ./aklog.tar.gz
-          sed -e "s/#_url_#/${url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > .github/data/aklog.rb
+          en_url=`echo $url |sed 's#\/#\\\/#g'`
+          sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > .github/data/aklog.rb
           content=$(cat .github/data/aklog.rb)
           echo $content

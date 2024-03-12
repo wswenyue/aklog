@@ -73,6 +73,10 @@ jobs:
       contents: write # We generate static HTML, JS, CSS so we need write access to the repo
       pages: write
       id-token: write
+      deployments: write
+      statuses: write
+      actions: write
+      checks: read
     steps:
       - name: Checkout private tools
         uses: actions/checkout@v4
@@ -92,8 +96,8 @@ jobs:
           rm -rf formula.rb
       - name: Commit files
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@users.noreply.github.com"
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
           ls -alh
           git status
           git commit -a -m "Add changes"

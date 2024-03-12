@@ -38,6 +38,7 @@ jobs:
           git push origin $NEW_TAG
 
       - name: read formula config file
+        id : read_formula
         run: |
           url="https://github.com/wswenyue/aklog/archive/${NEW_TAG}.tar.gz"
           sha256=$(wget -O aklog.tar.gz ${url} && shasum -a 256 aklog.tar.gz | cut -d ' ' -f 1)
@@ -49,8 +50,12 @@ jobs:
           #          cat .github/data/aklog.rb >> $GITHUB_STEP_SUMMARY
           echo "========1=======" >> $GITHUB_STEP_SUMMARY
           formula=$(sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb)
-          echo "formula: formula"
-          echo "formula=$formula" >> $GITHUB_ENV
+          echo "formula: ${formula}"
+          {
+            echo 'formula<<EOF'
+            "$formula"
+            echo EOF
+          } >> "$GITHUB_ENV"
           echo "========2=======" >> $GITHUB_STEP_SUMMARY
           echo $formula >> $GITHUB_STEP_SUMMARY
           echo "========3=======" >> $GITHUB_STEP_SUMMARY

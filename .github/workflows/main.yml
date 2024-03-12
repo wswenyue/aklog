@@ -69,6 +69,10 @@ jobs:
     name: publish homebrew
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # We generate static HTML, JS, CSS so we need write access to the repo
+      pages: write
+      id-token: write
     steps:
       - name: Checkout private tools
         uses: actions/checkout@v4
@@ -76,8 +80,7 @@ jobs:
           repository: wswenyue/homebrew-aklog
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-          #            token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
-#          path: Formula
+          # token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
       - name: Download formula
         uses: actions/download-artifact@v4
         with:
@@ -86,6 +89,7 @@ jobs:
         run: |
           echo "save data to aklog.rb"
           cat formula.rb > Formula/aklog.rb
+          rm -rf formula.rb
       - name: Commit files
         run: |
           git config user.name "GitHub Actions"

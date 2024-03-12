@@ -67,6 +67,7 @@ jobs:
 
   homebrew:
     name: publish homebrew
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout private tools

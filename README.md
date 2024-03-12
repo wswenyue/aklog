@@ -31,7 +31,7 @@ usage: aklog.py [-h] [-v] [-pc | -pa | -p PACKAGE [PACKAGE ...] | -pn PACKAGE_NO
                 [-t TAG [TAG ...] | -te TAG_EXACT [TAG_EXACT ...]] [-mn MSG_NOT [MSG_NOT ...]] [-m MSG [MSG ...] | -mjson MSG_JSON_VALUE [MSG_JSON_VALUE ...]] [-l LEVEL]
                 [-cs [CMD_SCREEN_CAP] | -cr [CMD_RECORD_VIDEO]]
 
-Android开发利器-AKLog-v5.0.1 (Android developer's Swiss Army Knife for Log)
+Android开发利器-AKLog-v5.0.4 (Android developer's Swiss Army Knife for Log)
 
 optional arguments:
   -h, --help            show this help message and exit

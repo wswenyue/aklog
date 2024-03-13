@@ -1,5 +1,4 @@
-# aklog
-
+# aklog [![Release Application](https://github.com/wswenyue/aklog/actions/workflows/main.yml/badge.svg)](https://github.com/wswenyue/aklog/actions/workflows/main.yml)
 Android developer's Swiss Army Knife for Log
 
 ![示例](./res/demo.jpg)

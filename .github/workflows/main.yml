@@ -85,6 +85,7 @@ jobs:
           repository: wswenyue/homebrew-aklog
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
           # token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
       - name: Download formula
         uses: actions/download-artifact@v4
@@ -108,5 +109,5 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           repository: wswenyue/homebrew-aklog
-          github_token: ${{ secrets.push_token }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           branch: ${{ github.ref }}

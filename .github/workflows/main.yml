@@ -58,12 +58,6 @@ jobs:
         with:
           name: formula
           path: formula.rb
-  #
-  #      - name: print formula
-  #        run: |
-  #          echo "======end======" >> $GITHUB_STEP_SUMMARY
-  #  #          echo $formula >> $GITHUB_STEP_SUMMARY
-  #  #          echo "============" >> $GITHUB_STEP_SUMMARY
 
   homebrew:
     name: publish homebrew
@@ -79,14 +73,12 @@ jobs:
       actions: write
       checks: read
     steps:
-      - name: Checkout private tools
+      - name: Checkout homebrew-aklog
         uses: actions/checkout@v4
         with:
           repository: wswenyue/homebrew-aklog
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }}
-          # token: ${{ secrets.GH_PAT }} # `GH_PAT` is a secret that contains your PAT
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          persist-credentials: true
       - name: Download formula
         uses: actions/download-artifact@v4
         with:
@@ -103,11 +95,9 @@ jobs:
           ls -alh
           git status
           git commit -a -m "Add changes"
-      #          git push origin master
-      #          echo "succeed."
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
           repository: wswenyue/homebrew-aklog
-          github_token: ${{ secrets.PAT_TOKEN }}
+          ssh: true
           branch: ${{ github.ref }}

@@ -30,6 +30,17 @@ def cmd_run(cmd: str) -> str:
     return get_str(output)
 
 
+def cmd_run_iter(cmd: str):
+    _cmd = str(cmd).split()
+    popen = subprocess.Popen(_cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    for stdout_line in iter(popen.stdout.readline, ""):
+        yield get_str(stdout_line)
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, _cmd)
+
+
 def is_empty(obj):
     if obj is None:
         return True
@@ -57,19 +68,25 @@ def is_not_empty(obj):
     return not is_empty(obj)
 
 
+def next_revision_num(version_pre: str) -> int:
+    _max = -1
+    for line in cmd_run_iter("git ls-remote --tags -q"):
+        if is_empty(line):
+            continue
+        if version_pre not in line:
+            continue
+        code = int(line.rsplit('.', 1)[-1])
+        print(f"code:{code}")
+        if _max < code:
+            _max = code
+    return _max + 1
+
+
 v_prefix = os.getenv('VERSION_PREFIX')
 v_major_minor = os.getenv('VERSION_MAJOR_MINOR')
 print(f"v_prefix:{v_prefix}")
 print(f"v_major_minor:{v_major_minor}")
-# Get the path of the runner file
-v_revision_old = cmd_run(
-    f"git tag --list '{v_prefix}{v_major_minor}.*' --sort=-version:refname | head -n 1 | grep -oE '[0-9]+$'")
-v_revision = 0
-if is_empty(v_revision_old):
-    print("v_revision_old empty!!!")
-    v_revision = 0
-else:
-    v_revision = int(v_revision_old.strip()) + 1
+v_revision = next_revision_num(f"{v_prefix}{v_major_minor}.")
 new_tag = f"{v_prefix}{v_major_minor}.{v_revision}"
 print(f"newTag:{new_tag}")
 add_env("NEW_TAG", new_tag)

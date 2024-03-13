@@ -21,9 +21,9 @@ jobs:
           fetch-tags: 'true'
 
       - name: Set up Python
-          uses: actions/setup-python@v4
-          with:
-            python-version: '3.x'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
       - name: read cfg to env
         id: read_cfg

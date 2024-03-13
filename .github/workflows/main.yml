@@ -113,6 +113,7 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
           ls -alh
+          git add .
           git status
           git commit -a -m "rebot publish commit"
           echo "- :white_check_mark:  git add and commit." >> $GITHUB_STEP_SUMMARY

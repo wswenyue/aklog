@@ -70,6 +70,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
+      pull-requests: write   # 'write' access to pull requests
       contents: write # We generate static HTML, JS, CSS so we need write access to the repo
       pages: write
       id-token: write
@@ -101,11 +102,11 @@ jobs:
           ls -alh
           git status
           git commit -a -m "Add changes"
-          git push origin master
-          echo "succeed."
-#      - name: Push changes
-#        uses: ad-m/github-push-action@master
-#        with:
-#          repository: wswenyue/homebrew-aklog
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          branch: ${{ github.ref }}
+      #          git push origin master
+      #          echo "succeed."
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          repository: wswenyue/homebrew-aklog
+          github_token: ${{ secrets.push_token }}
+          branch: ${{ github.ref }}

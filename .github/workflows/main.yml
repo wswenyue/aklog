@@ -33,8 +33,8 @@ jobs:
             echo "v_minor:${v_minor}"
             VERSION_MAJOR_MINOR="${v_major}.${v_minor}"
             echo "VERSION_MAJOR_MINOR:${VERSION_MAJOR_MINOR}"
-            echo "VERSION_PREFIX=VERSION_PREFIX" >> $GITHUB_ENV
-            echo "VERSION_MAJOR_MINOR=VERSION_MAJOR_MINOR" >> $GITHUB_ENV
+            echo "VERSION_PREFIX=$VERSION_PREFIX" >> $GITHUB_ENV
+            echo "VERSION_MAJOR_MINOR=$VERSION_MAJOR_MINOR" >> $GITHUB_ENV
 
       - name: Generate Git Tag
         id: generate_tag

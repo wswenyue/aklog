@@ -20,15 +20,22 @@ jobs:
         with:
           fetch-depth: '0'
 
+      - name: read cfg to env
+          id: read_cfg
+          uses: mikefarah/yq@master
+          with:
+            cmd: |
+              VERSION_PREFIX=$(yq  '.version.prefix' .github/cfg.yml)
+              v_major=$(yq  '.version.major' .github/cfg.yml)
+              v_minor=$(yq  '.version.minor' .github/cfg.yml)
+              VERSION_MAJOR_MINOR="${v_major}.${v_minor}"
+              echo "VERSION_PREFIX=VERSION_PREFIX" >> $GITHUB_ENV
+              echo "VERSION_MAJOR_MINOR=VERSION_MAJOR_MINOR" >> $GITHUB_ENV
+
       - name: Generate Git Tag
         id: generate_tag
-        uses: mikefarah/yq@master
         run: |
           echo "- :white_check_mark: checkout done." >> $GITHUB_STEP_SUMMARY
-          VERSION_PREFIX=$(yq  '.version.prefix' .github/cfg.yml)
-          v_major=$(yq  '.version.major' .github/cfg.yml)
-          v_minor=$(yq  '.version.minor' .github/cfg.yml)
-          VERSION_MAJOR_MINOR="${v_major}.${v_minor}"
           VERSION_PATCH=$(git tag --list "${VERSION_PREFIX}${VERSION_MAJOR_MINOR}.*" --sort=-version:refname | head -n 1 | grep -oE '[0-9]+$')
           if [ -z "$VERSION_PATCH" ]; then
             VERSION_PATCH=0

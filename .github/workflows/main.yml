@@ -18,7 +18,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: '0'
+          fetch-tags: 'true'
+
+      - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.x'
 
       - name: read cfg to env
         id: read_cfg
@@ -35,21 +40,30 @@ jobs:
             echo "VERSION_MAJOR_MINOR:${VERSION_MAJOR_MINOR}"
             echo "VERSION_PREFIX=$VERSION_PREFIX" >> $GITHUB_ENV
             echo "VERSION_MAJOR_MINOR=$VERSION_MAJOR_MINOR" >> $GITHUB_ENV
-
-      - name: Generate Git Tag
-        id: generate_tag
-        run: |
-          echo "- :white_check_mark: checkout done." >> $GITHUB_STEP_SUMMARY
-          VERSION_PATCH=$(git tag --list "${VERSION_PREFIX}${VERSION_MAJOR_MINOR}.*" --sort=-version:refname | head -n 1 | grep -oE '[0-9]+$')
-          if [ -z "$VERSION_PATCH" ]; then
-            VERSION_PATCH=0
-          else
-            VERSION_PATCH=$((VERSION_PATCH + 1))
-          fi
-          NEW_TAG="${VERSION_PREFIX}${VERSION_MAJOR_MINOR}.${VERSION_PATCH}"
-          echo "Generated new tag: $NEW_TAG"
-          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
-          echo "- :white_check_mark: create new tag: ${NEW_TAG}" >> $GITHUB_STEP_SUMMARY
+      #      - name: Generate Git Tag
+      #          id: generate_tag
+      #          uses: actions/setup-python@v5
+      #          with:
+      #            python-version: '3.9'
+      #          run: |
+      #
+      #            - name: Generate Git Tag
+      #              id: generate_tag
+      #              run: |
+      #                echo "- :white_check_mark: checkout done." >> $GITHUB_STEP_SUMMARY
+      #                VERSION_PATCH=$(git tag --list "${VERSION_PREFIX}${VERSION_MAJOR_MINOR}.*" --sort=-version:refname | head -n 1 | grep -oE '[0-9]+$')
+      #                if [ -z "$VERSION_PATCH" ]; then
+      #                  VERSION_PATCH=0
+      #                else
+      #                  VERSION_PATCH=$((VERSION_PATCH + 1))
+      #                fi
+      #                NEW_TAG="${VERSION_PREFIX}${VERSION_MAJOR_MINOR}.${VERSION_PATCH}"
+      #                echo "Generated new tag: $NEW_TAG"
+      #                echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+      #                echo "- :white_check_mark: create new tag: ${NEW_TAG}" >> $GITHUB_STEP_SUMMARY
+      - name: generate git tag
+        id: gennerate_tag
+        run: python .github/build_new_tag.py
 
       - name: Push Git Tag
         run: |

@@ -57,7 +57,7 @@ jobs:
         id: update_formula
         run: |
           echo "- :white_check_mark: update formula config file" >> $GITHUB_STEP_SUMMARY
-          url="https://github.com/wswenyue/aklog/archive/${NEW_TAG}.tar.gz"
+          url="https://github.com/wswenyue/aklog/archive/refs/tags/${NEW_TAG}.tar.gz"
           sha256=$(wget -O aklog.tar.gz ${url} && shasum -a 256 aklog.tar.gz | cut -d ' ' -f 1)
           echo "> url: ${url}" >> $GITHUB_STEP_SUMMARY
           echo "> sha256: ${sha256}" >> $GITHUB_STEP_SUMMARY

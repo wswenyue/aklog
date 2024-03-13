@@ -30,11 +30,11 @@ jobs:
         uses: mikefarah/yq@master
         with:
           cmd: |
-            VERSION_PREFIX=$(yq '.version.prefix' .github/cfg.yml)
+            VERSION_PREFIX=$(yq '.version.prefix' cfg.yml)
             echo "VERSION_PREFIX:${VERSION_PREFIX}"
-            v_major=$(yq '.version.major' .github/cfg.yml)
+            v_major=$(yq '.version.major' cfg.yml)
             echo "v_major:${v_major}"
-            v_minor=$(yq '.version.minor' .github/cfg.yml)
+            v_minor=$(yq '.version.minor' cfg.yml)
             echo "v_minor:${v_minor}"
             VERSION_MAJOR_MINOR="${v_major}.${v_minor}"
             echo "VERSION_MAJOR_MINOR:${VERSION_MAJOR_MINOR}"
@@ -105,7 +105,6 @@ jobs:
           echo "- :white_check_mark:  checkout done." >> $GITHUB_STEP_SUMMARY
           echo "- :white_check_mark:  download formula down." >> $GITHUB_STEP_SUMMARY
           cat formula.rb > Formula/aklog.rb
-          echo "${NEW_TAG}" > version.txt
           rm -rf formula.rb
           echo "- :white_check_mark:  overwrite formula file." >> $GITHUB_STEP_SUMMARY
       - name: Commit files
@@ -113,7 +112,6 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
           ls -alh
-          git add .
           git status
           git commit -a -m "rebot publish commit"
           echo "- :white_check_mark:  git add and commit." >> $GITHUB_STEP_SUMMARY

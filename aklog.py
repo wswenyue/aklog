@@ -5,6 +5,8 @@ import argparse
 import subprocess
 from typing import Optional, List, Dict, Any
 
+import yaml
+
 import color_print
 import comm_tools
 from adb_utils import AdbHelper
@@ -30,7 +32,6 @@ def _to_str_arr(obj: Any) -> List[str]:
 
 
 class AkLogArgs(object):
-    AK_LOG_VERSION = "v5.1.0"
     dest_version = "version"
     dest_package = "package"
     dest_package_all = "package_all"
@@ -50,6 +51,12 @@ class AkLogArgs(object):
     dest_cmd = "cmd"
     # 默认值
     cmd_name_define: Dict[str, List[str]] = {}
+
+    def __init__(self):
+        with open('./cfg.yml', 'r') as f:
+            self.cfg = yaml.load(f, Loader=yaml.SafeLoader)
+        version = self.cfg['version']
+        self.AK_LOG_VERSION = f"{version['prefix']}{version['major']}.{version['minor']}.x"
 
     def _define_args_package(self, args_parser: argparse.ArgumentParser):
         args_package = args_parser.add_mutually_exclusive_group()
@@ -267,7 +274,7 @@ class AkLogArgs(object):
         args_parser = self._define_args()
         # args_parser.print_help()
         args = args_parser.parse_args(args=argv)
-        args_var: dict[str, Any] = vars(args)
+        args_var: Dict[str, Any] = vars(args)
         if self._parser_run_cmd(args_var):
             return
         self._run_log(args_var)

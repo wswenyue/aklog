@@ -25,10 +25,14 @@ jobs:
         uses: mikefarah/yq@master
         with:
           cmd: |
-            VERSION_PREFIX=$(yq  '.version.prefix' .github/cfg.yml)
-            v_major=$(yq  '.version.major' .github/cfg.yml)
-            v_minor=$(yq  '.version.minor' .github/cfg.yml)
+            VERSION_PREFIX=$(yq '.version.prefix' .github/cfg.yml)
+            echo "VERSION_PREFIX:${VERSION_PREFIX}"
+            v_major=$(yq '.version.major' .github/cfg.yml)
+            echo "v_major:${v_major}"
+            v_minor=$(yq '.version.minor' .github/cfg.yml)
+            echo "v_minor:${v_minor}"
             VERSION_MAJOR_MINOR="${v_major}.${v_minor}"
+            echo "VERSION_MAJOR_MINOR:${VERSION_MAJOR_MINOR}"
             echo "VERSION_PREFIX=VERSION_PREFIX" >> $GITHUB_ENV
             echo "VERSION_MAJOR_MINOR=VERSION_MAJOR_MINOR" >> $GITHUB_ENV
 

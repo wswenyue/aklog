@@ -10,8 +10,10 @@ jobs:
     name: publish tag
     runs-on: ubuntu-latest
     steps:
-      - name: Begin
-        run: echo "## Release Application" >> $GITHUB_STEP_SUMMARY
+      - shell: bash
+        run: |
+          echo "## Release Application" >> $GITHUB_STEP_SUMMARY
+          echo "### build and push tag for aklog" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,10 +22,13 @@ jobs:
 
       - name: Generate Git Tag
         id: generate_tag
+        uses: mikefarah/yq@master
         run: |
           echo "- :white_check_mark: checkout done." >> $GITHUB_STEP_SUMMARY
-          VERSION_PREFIX="v"
-          VERSION_MAJOR_MINOR="5.0"
+          VERSION_PREFIX=$(yq  '.version.prefix' .github/cfg.yml)
+          v_major=$(yq  '.version.major' .github/cfg.yml)
+          v_minor=$(yq  '.version.minor' .github/cfg.yml)
+          VERSION_MAJOR_MINOR="${v_major}.${v_minor}"
           VERSION_PATCH=$(git tag --list "${VERSION_PREFIX}${VERSION_MAJOR_MINOR}.*" --sort=-version:refname | head -n 1 | grep -oE '[0-9]+$')
           if [ -z "$VERSION_PATCH" ]; then
             VERSION_PATCH=0
@@ -49,8 +54,8 @@ jobs:
           echo "- :white_check_mark: update formula config file" >> $GITHUB_STEP_SUMMARY
           url="https://github.com/wswenyue/aklog/archive/${NEW_TAG}.tar.gz"
           sha256=$(wget -O aklog.tar.gz ${url} && shasum -a 256 aklog.tar.gz | cut -d ' ' -f 1)
-          echo "- > url==>${url}" >> $GITHUB_STEP_SUMMARY
-          echo "- > sha256==>${sha256}" >> $GITHUB_STEP_SUMMARY
+          echo "> url: ${url}" >> $GITHUB_STEP_SUMMARY
+          echo "> sha256: ${sha256}" >> $GITHUB_STEP_SUMMARY
           rm -rf ./aklog.tar.gz
           en_url=`echo $url |sed 's#\/#\\\/#g'`
           sed -e "s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" .github/data/aklog.rb > formula.rb
@@ -76,6 +81,10 @@ jobs:
       actions: write
       checks: read
     steps:
+      - shell: bash
+        run: |
+          echo "### publish homebrew aklog" >> $GITHUB_STEP_SUMMARY
+
       - name: Checkout homebrew-aklog
         uses: actions/checkout@v4
         with:
@@ -88,9 +97,11 @@ jobs:
           name: formula
       - shell: bash
         run: |
-          echo "save data to aklog.rb"
+          echo "- :white_check_mark:  checkout done." >> $GITHUB_STEP_SUMMARY
+          echo "- :white_check_mark:  download formula down." >> $GITHUB_STEP_SUMMARY
           cat formula.rb > Formula/aklog.rb
           rm -rf formula.rb
+          echo "- :white_check_mark:  overwrite formula file." >> $GITHUB_STEP_SUMMARY
       - name: Commit files
         run: |
           git config user.name github-actions[bot]
@@ -98,9 +109,14 @@ jobs:
           ls -alh
           git status
           git commit -a -m "Add changes"
+          echo "- :white_check_mark:  git add and commit." >> $GITHUB_STEP_SUMMARY
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
           repository: wswenyue/homebrew-aklog
           ssh: true
           branch: ${{ github.ref }}
+      - shell: bash
+        run: |
+          echo "- :white_check_mark:  git push succeed." >> $GITHUB_STEP_SUMMARY
+          echo "### :smile: I'm so lucky to have done this. Congratulations!!! :smile:" >> $GITHUB_STEP_SUMMARY

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Created by wswenyue on 2018/11/4.
 import argparse
+import os
 import subprocess
 from typing import Optional, List, Dict, Any
 
@@ -53,7 +54,9 @@ class AkLogArgs(object):
     cmd_name_define: Dict[str, List[str]] = {}
 
     def __init__(self):
-        with open('./cfg.yml', 'r') as f:
+        cur_path = os.path.dirname(os.path.realpath(__file__))
+        cfg_path = os.path.join(cur_path, "cfg.yml")
+        with open(cfg_path, 'r') as f:
             self.cfg = yaml.load(f, Loader=yaml.SafeLoader)
         version = self.cfg['version']
         self.AK_LOG_VERSION = f"{version['prefix']}{version['major']}.{version['minor']}.x"

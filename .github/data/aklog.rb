@@ -6,6 +6,7 @@ class Aklog < Formula
   homepage "https://github.com/wswenyue/aklog"
   url "#_url_#"
   sha256 "#_sha256_#"
+  version '#_version_#'
 
 
   def install

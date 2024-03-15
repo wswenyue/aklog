@@ -5,6 +5,7 @@
 import os
 import subprocess
 import sys
+from typing import Dict, Any
 
 
 def get_str(obj) -> str:
@@ -17,11 +18,12 @@ def get_str(obj) -> str:
         return str(obj)
 
 
-def add_env(key: str, value):
+def add_envs(envs: Dict[str, Any]):
     env_file = os.getenv('GITHUB_ENV')
     # write to the file
     with open(env_file, "a") as env_file:
-        env_file.write(f"{key}={value}")
+        for key, value in envs.items():
+            env_file.write(f"{key}={value}")
 
 
 def cmd_run(cmd: str) -> str:
@@ -76,7 +78,7 @@ def next_revision_num(version_pre: str) -> int:
         if version_pre not in line:
             continue
         code = int(line.rsplit('.', 1)[-1])
-        print(f"code:{code}")
+        # print(f"code:{code}")
         if _max < code:
             _max = code
     return _max + 1
@@ -84,10 +86,14 @@ def next_revision_num(version_pre: str) -> int:
 
 v_prefix = os.getenv('VERSION_PREFIX')
 v_major_minor = os.getenv('VERSION_MAJOR_MINOR')
-print(f"v_prefix:{v_prefix}")
-print(f"v_major_minor:{v_major_minor}")
+print(f"v_prefix: {v_prefix}")
+print(f"v_major_minor: {v_major_minor}")
 v_revision = next_revision_num(f"{v_prefix}{v_major_minor}.")
-new_tag = f"{v_prefix}{v_major_minor}.{v_revision}"
-print(f"newTag:{new_tag}")
-add_env("NEW_TAG", new_tag)
+new_version = f"{v_major_minor}.{v_revision}"
+new_tag = f"{v_prefix}{new_version}"
+print(f"new_tag: {new_tag}")
+add_envs({
+    "NEW_VERSION": new_version,
+    "NEW_TAG": new_tag
+})
 sys.exit(0)

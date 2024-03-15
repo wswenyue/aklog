@@ -13,5 +13,5 @@ if has "python3"; then
 elif has "python"; then
 	python ${AK_DIR}/aklog.py $@
 else
-	echo >&2 "Failed to execute, please insatll python before."
+	echo >&2 "Failed to execute, please install python before."
 fi

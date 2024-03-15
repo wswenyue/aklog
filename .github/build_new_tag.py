@@ -24,6 +24,7 @@ def add_envs(envs: Dict[str, Any]):
     with open(env_file, "a") as env_file:
         for key, value in envs.items():
             env_file.write(f"{key}={value}")
+            env_file.write("\n")
 
 
 def cmd_run(cmd: str) -> str:

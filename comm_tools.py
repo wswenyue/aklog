@@ -130,9 +130,9 @@ def create_dir_not_exists(path):
         # print(f"{path} already exists!!!")
         return
     try:
-        print(f"create_dir_not_exists-path->{path}")
+        # print(f"create_dir_not_exists-path->{path}")
         dir_path = os.path.dirname(path)
-        print(f"create_dir_not_exists-dir_path->{dir_path}")
+        # print(f"create_dir_not_exists-dir_path->{dir_path}")
         os.makedirs(dir_path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:

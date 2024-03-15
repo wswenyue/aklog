@@ -8,6 +8,7 @@ class Aklog < Formula
   sha256 "#_sha256_#"
   version '#_version_#'
 
+  depends_on :python3
 
   def install
     libexec.install Dir["*"]
@@ -16,7 +17,7 @@ class Aklog < Formula
   end
 
   test do
-    system "false"
+    system bin/"aklog", "--version"
   end
 
 end

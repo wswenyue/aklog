@@ -20,6 +20,8 @@ def is_empty(obj):
     if type(obj) is str:
         if obj == "":
             return True
+        elif obj == "None":
+            return True
         elif obj.strip() == "":
             return True
         else:

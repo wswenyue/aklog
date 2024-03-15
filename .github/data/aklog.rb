@@ -8,8 +8,6 @@ class Aklog < Formula
   sha256 "#_sha256_#"
   version '#_version_#'
 
-  depends_on :python3
-
   def install
     libexec.install Dir["*"]
     bin.install libexec/"aklog" => "aklog"

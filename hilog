@@ -1,0 +1,19 @@
+#!/bin/bash
+# Author: wswenyue.
+# Date & Time: 2018-11-05 18:59:31
+# Description: a bash script
+AK_DIR=exe_path
+
+has(){
+    type "$1" > /dev/null 2>&1
+}
+
+if has "python3"; then
+	# shellcheck disable=SC2068
+	python3 ${AK_DIR}/hilog.py $@
+elif has "python"; then
+	# shellcheck disable=SC2068
+	python ${AK_DIR}/hilog.py $@
+else
+	echo >&2 "Failed to execute, please install python before."
+fi

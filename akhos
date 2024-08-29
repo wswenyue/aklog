@@ -10,10 +10,10 @@ has(){
 
 if has "python3"; then
 	# shellcheck disable=SC2068
-	python3 ${AK_DIR}/hilog.py $@
+	python3 ${AK_DIR}/akhos.py $@
 elif has "python"; then
 	# shellcheck disable=SC2068
-	python ${AK_DIR}/hilog.py $@
+	python ${AK_DIR}/akhos.py $@
 else
 	echo >&2 "Failed to execute, please install python before."
 fi

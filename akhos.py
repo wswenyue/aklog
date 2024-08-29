@@ -21,7 +21,7 @@ def _to_str_arr(obj: Any) -> List[str]:
     return _targetList
 
 
-class HiLogArgs(object):
+class AkHosArgs(object):
     dest_version = "version"
     dest_package = "package"
     dest_package_all = "package_all"
@@ -48,7 +48,7 @@ class HiLogArgs(object):
         with open(cfg_path, 'r') as f:
             self.cfg = yaml.load(f, Loader=yaml.SafeLoader)
         version = self.cfg['version']
-        self.HI_LOG_VERSION = f"{version['prefix']}{version['major']}.{version['minor']}.x"
+        self.AK_HOS_VERSION = f"{version['prefix']}{version['major']}.{version['minor']}.x"
 
     # def _define_args_package(self, args_parser: argparse.ArgumentParser):
     #     args_package = args_parser.add_mutually_exclusive_group()
@@ -219,8 +219,8 @@ class HiLogArgs(object):
 
     def _define_args(self) -> argparse.ArgumentParser:
         args_parser = argparse.ArgumentParser(
-            description=f"Harmony开发利器-HiLog-{self.HI_LOG_VERSION} (Harmony developer's Swiss Army Knife for Log)")
-        args_parser.add_argument('-v', '--' + self.dest_version, action=self.dest_version, version=self.HI_LOG_VERSION)
+            description=f"Harmony开发利器-HiLog-{self.AK_HOS_VERSION} (Harmony developer's Swiss Army Knife for Log)")
+        args_parser.add_argument('-v', '--' + self.dest_version, action=self.dest_version, version=self.AK_HOS_VERSION)
         # package 相关参数
         # self._define_args_package(args_parser)
         # # tag 过滤相关参数
@@ -273,4 +273,4 @@ class HiLogArgs(object):
 
 
 if __name__ == '__main__':
-    HiLogArgs().run()
+    AkHosArgs().run()

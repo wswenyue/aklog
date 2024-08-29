@@ -30,7 +30,10 @@ class ScreenCapTools(object):
 
     def do_capture(self):
         comm_tools.create_dir_not_exists(self._dir_path)
-        pic_name = datetime.datetime.now().strftime("%m%d-%H%M%S-%f.png")
+        if self._is_harmonyos:
+            pic_name = datetime.datetime.now().strftime("%m%d-%H%M%S-%f.jpeg")
+        else:
+            pic_name = datetime.datetime.now().strftime("%m%d-%H%M%S-%f.png")
         pic_local_path = os.path.join(self._dir_path, pic_name)
         pic_phone_path = os.path.join(self.get_phone_cap_dir(), pic_name)
         if self._is_harmonyos:

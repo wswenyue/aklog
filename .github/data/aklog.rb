@@ -11,14 +11,14 @@ class Aklog < Formula
   def install
     libexec.install Dir["*"]
     bin.install libexec/"aklog" => "aklog"
-    bin.install libexec/"hilog" => "hilog"
+    bin.install libexec/"akhos" => "akhos"
     inreplace bin/"aklog", "exe_path", "#{libexec}"
-    inreplace bin/"hilog", "exe_path", "#{libexec}"
+    inreplace bin/"akhos", "exe_path", "#{libexec}"
   end
 
   test do
     system bin/"aklog", "--version"
-    system bin/"hilog", "--version"
+    system bin/"akhos", "--version"
   end
 
 end

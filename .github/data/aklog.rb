@@ -16,6 +16,15 @@ class Aklog < Formula
     inreplace bin/"akhos", "exe_path", "#{libexec}"
   end
 
+  def post_install
+    Dir["#{libexec}/lib/*.dylib"].each do |dylib|
+      chmod 0664, dylib
+      MachO::Tools.change_dylib_id(dylib, "@rpath/#{File.basename(dylib)}")
+      MachO.codesign!(dylib) if Hardware::CPU.arm?
+      chmod 0444, dylib
+    end
+  end
+
   test do
     system bin/"aklog", "--version"
     system bin/"akhos", "--version"

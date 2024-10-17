@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Created by wswenyue on 2018/11/4.
 import errno
+import fnmatch
 import os
 import platform
 import shutil
@@ -9,7 +10,7 @@ import subprocess
 import sys
 
 import threading
-from typing import Tuple, Iterable
+from typing import Tuple, Iterable, List, Optional
 
 
 def is_empty(obj):
@@ -300,3 +301,23 @@ def get_file_extension(file_path):
     base_name = os.path.basename(file_path)
     print(base_name)
     return base_name[base_name.index(".") + 1:]
+
+
+def find_files(target_path_pattern, path) -> List[str]:
+    """
+    给定搜索 target_path_pattern 正则，在指定的path路径下搜索匹配文件
+    find("/sdk/*/openharmony/toolchains/hdc*", environ["HARMONY_HOME"])
+    """
+    result = []
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if fnmatch.fnmatch(os.path.join(root, name).replace(path, ""), target_path_pattern):
+                result.append(to_str(os.path.join(root, name)))
+    return result
+
+
+def find_file(target_path_pattern, path) -> Optional[str]:
+    ret = find_files(target_path_pattern, path)
+    if len(ret) == 0:
+        return None
+    return ret[0]

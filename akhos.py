@@ -8,8 +8,7 @@ from typing import Optional, List, Dict, Any
 import yaml
 
 import comm_tools
-from dump_crash_log_tools import DumpCrashLog
-from phone_record_video_tools import PhoneRecordVideo
+from hdc_cmd import HdcCmd
 from screen_cap_tools import ScreenCapTools
 
 
@@ -172,22 +171,28 @@ class AkHosArgs(object):
     def _define_args_cmd(self, args_parser: argparse.ArgumentParser):
         comm_cmd = args_parser.add_subparsers(dest=self.dest_cmd, title="常用命令", description="快捷执行常用的命令",
                                               help="常用命令使用说明")
+
+        install = comm_cmd.add_parser('install', aliases=['i'], help="install hap")
+        self.cmd_name_define['install'] = ['install', 'i']
+        install.add_argument('-path', type=str,
+                             help=f"命令：安装hap包")
+
         cap = comm_cmd.add_parser('cap-screen', aliases=['cs'], help="获取当前手机截屏")
         self.cmd_name_define['cap-screen'] = ['cap-screen', 'cs']
         cap.add_argument('-path', type=str,
                          help=f"命令：获取当前手机截屏，并保持到(传入的)指定位置，默认位置是：${ScreenCapTools.def_screen_cap_path}")
-
-        record = comm_cmd.add_parser('record-video', aliases=['rv'], help="录制当前手机屏幕")
-        self.cmd_name_define['record-video'] = ['record-video', 'rv']
-        record.add_argument('-path', type=str,
-                            help=f"命令：录制当前手机视频，并保存到(传入的)指定位置。默认位置是：${PhoneRecordVideo.def_record_video_path}")
-
-        dump = comm_cmd.add_parser('dump-log', aliases=['dump'], help="dump app(或native) 崩溃日志")
-        self.cmd_name_define['dump-log'] = ['dump-log', 'dump']
-        dump.add_argument('-type', type=int, default=0, help="打印日志类型[0:app日志；1:native日志]，默认是打印app日志")
-        dump.add_argument('-maxsize', type=int, default=10, help="最多打印的日志数量")
-        dump.add_argument('-path', type=str,
-                          help=f"dump app 崩溃日志，并保持到(传入的)指定位置，默认位置是：${DumpCrashLog.DEF_PATH}")
+        #
+        # record = comm_cmd.add_parser('record-video', aliases=['rv'], help="录制当前手机屏幕")
+        # self.cmd_name_define['record-video'] = ['record-video', 'rv']
+        # record.add_argument('-path', type=str,
+        #                     help=f"命令：录制当前手机视频，并保存到(传入的)指定位置。默认位置是：${PhoneRecordVideo.def_record_video_path}")
+        #
+        # dump = comm_cmd.add_parser('dump-log', aliases=['dump'], help="dump app(或native) 崩溃日志")
+        # self.cmd_name_define['dump-log'] = ['dump-log', 'dump']
+        # dump.add_argument('-type', type=int, default=0, help="打印日志类型[0:app日志；1:native日志]，默认是打印app日志")
+        # dump.add_argument('-maxsize', type=int, default=10, help="最多打印的日志数量")
+        # dump.add_argument('-path', type=str,
+        #                   help=f"dump app 崩溃日志，并保持到(传入的)指定位置，默认位置是：${DumpCrashLog.DEF_PATH}")
 
     def _parser_run_cmd(self, args: Dict[str, object]) -> bool:
         cmd = args[self.dest_cmd]
@@ -198,6 +203,9 @@ class AkHosArgs(object):
             if _dir == 'null':
                 _dir = None
             ScreenCapTools(_dir, is_harmonyos=True).do_capture()
+            return True
+        if cmd in self.cmd_name_define['install']:
+            HdcCmd().run_cmd(f"install -r {comm_tools.get_str(args['path'])}")
             return True
         # if cmd in self.cmd_name_define['record-video']:
         #     _dir = comm_tools.get_str(args['path'])
@@ -219,7 +227,7 @@ class AkHosArgs(object):
 
     def _define_args(self) -> argparse.ArgumentParser:
         args_parser = argparse.ArgumentParser(
-            description=f"Harmony开发利器-HiLog-{self.AK_HOS_VERSION} (Harmony developer's Swiss Army Knife for Log)")
+            description=f"Harmony开发利器-akHOS-{self.AK_HOS_VERSION} (Harmony developer's Swiss Army Knife for Log)")
         args_parser.add_argument('-v', '--' + self.dest_version, action=self.dest_version, version=self.AK_HOS_VERSION)
         # package 相关参数
         # self._define_args_package(args_parser)

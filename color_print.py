@@ -317,7 +317,7 @@ class Colors(object):
     LightCyan = AsciiColor(fg="light_cyan")
     Gray = AsciiColor(fg="gray")
     LightGray = AsciiColor(fg="light_gray")
-    Blue = AsciiColor(fg="blue")
+    Blue = AsciiColor(fg="light_blue")
     LightBlue = AsciiColor(fg="light_blue")
     Yellow = AsciiColor(fg="yellow")
     LightYellow = AsciiColor(fg="light_yellow")

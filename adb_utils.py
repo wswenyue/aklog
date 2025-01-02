@@ -7,7 +7,7 @@ see : https://www.cnblogs.com/liuzhipenglove/p/7063808.html
 """
 import os
 import subprocess
-
+import shutil
 import comm_tools
 from comm_tools import is_windows_os, is_exe, cmd_run_iter, is_empty, get_str
 
@@ -19,34 +19,40 @@ class AdbCmd(object):
     def find_adb(adb_path: str = None) -> str:
         if comm_tools.is_not_empty(AdbCmd._adb):
             return AdbCmd._adb
-        _path = None
-        if comm_tools.is_empty(adb_path):
-            if "ANDROID_HOME" in os.environ:
-                if is_windows_os():
-                    path = os.path.join(os.environ["ANDROID_HOME"], "platform-tools", "adb.exe")
-                    if os.path.exists(path):
-                        _path = path
-                    else:
-                        raise EnvironmentError(
-                            "Adb not found in $ANDROID_HOME path: %s." % os.environ["ANDROID_HOME"])
-                else:
-                    path = os.path.join(os.environ["ANDROID_HOME"], "platform-tools", "adb")
-                    if os.path.exists(path):
-                        _path = path
-                    else:
-                        raise EnvironmentError(
-                            "Adb not found in $ANDROID_HOME path: %s." % os.environ["ANDROID_HOME"])
-            else:
-                raise EnvironmentError(
-                    "Adb not found in $ANDROID_HOME path: %s." % os.environ["ANDROID_HOME"])
-        else:
-            _path = adb_path
 
-        if not is_exe(_path):
-            raise ValueError(f"the {_path} is not executable file!!!")
-        else:
-            AdbCmd._adb = _path
-        return AdbCmd._adb
+        def check_adb_path(path):
+            if os.path.exists(path) and is_exe(path):
+                return path
+            return None
+
+        # Check if a custom adb_path is provided
+        if comm_tools.is_not_empty(adb_path):
+            resolved_path = check_adb_path(adb_path)
+            if resolved_path:
+                AdbCmd._adb = resolved_path
+                return AdbCmd._adb
+            raise ValueError(f"The specified adb path '{adb_path}' is not valid or not executable.")
+
+        # Check system PATH for adb
+        adb_in_path = shutil.which("adb")
+        if adb_in_path:
+            AdbCmd._adb = adb_in_path
+            return AdbCmd._adb
+
+        # Check ANDROID_HOME environment variable
+        android_home = os.environ.get("ANDROID_HOME")
+        if android_home:
+            adb_exe_name = "adb.exe" if is_windows_os() else "adb"
+            platform_tools_path = os.path.join(android_home, "platform-tools", adb_exe_name)
+            resolved_path = check_adb_path(platform_tools_path)
+            if resolved_path:
+                AdbCmd._adb = resolved_path
+                return AdbCmd._adb
+            raise EnvironmentError(f"Adb not found in ANDROID_HOME path: {android_home}.")
+        
+        raise EnvironmentError(
+            "Adb could not be found. Ensure adb is in the system PATH or ANDROID_HOME is correctly set."
+        )
 
 
 class AdbHelper(object):

@@ -6,7 +6,11 @@ import os
 import subprocess
 from typing import Optional, List, Dict, Any
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    print("Please install pyyaml before using aklog!!! [$ pip install pyyaml]")
+    exit(1)
 
 import color_print
 import comm_tools

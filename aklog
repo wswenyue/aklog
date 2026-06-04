@@ -9,9 +9,9 @@ has(){
 }
 
 if has "python3"; then
-	python3 ${AK_DIR}/aklog.py $@
+	PYTHONPATH="${AK_DIR}/src" python3 -m aklog "$@"
 elif has "python"; then
-	python ${AK_DIR}/aklog.py $@
+	PYTHONPATH="${AK_DIR}/src" python -m aklog "$@"
 else
 	echo >&2 "Failed to execute, please install python before."
 fi

@@ -1,4 +1,22 @@
+# Python
 *.pyc
-/libs/*.pyc
-.idea/*
-.idea
+__pycache__/
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+
+# Test / lint / typecheck
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.idea/
+
+# OS
+.DS_Store

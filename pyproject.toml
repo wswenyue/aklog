@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "aklog"
+version = "0.0.0.dev0"
+description = "Android & HarmonyOS developer Swiss Army Knife for Log"
+readme = "README.md"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+    "mypy>=1.8",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["aklog"]
+omit = [
+    "*/tests/*",
+    "*/__main__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+fail_under = 75
+show_missing = true
+skip_covered = false
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "UP", "N", "SIM", "RUF",
+]
+ignore = [
+    "E501",
+    "N802", "N803", "N806", "N815",
+    # Legacy Py2.7-compatible modules intentionally keep these patterns.
+    "UP006", "UP009", "UP010", "UP015", "UP028", "UP030", "UP031", "UP032", "UP035", "UP036",
+    "RUF001", "RUF002", "RUF003", "RUF005", "RUF012", "RUF013",
+    "SIM103", "SIM105", "SIM108", "SIM110", "SIM118",
+    "B024",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "SIM117"]
+
+[tool.mypy]
+python_version = "3.9"
+mypy_path = "src"
+packages = ["aklog"]
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = false
+ignore_missing_imports = true
+no_implicit_optional = false
+
+[[tool.mypy.overrides]]
+module = [
+    "aklog.core.comm_tools",
+    "aklog.core.color_print",
+    "aklog.log.info",
+    "aklog.log.printer",
+    "aklog.log.parser",
+    "aklog.log.filters",
+    "aklog.cli.args",
+    "aklog.device.adb",
+    "aklog.device.hdc",
+]
+ignore_errors = true

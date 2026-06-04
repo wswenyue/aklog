@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+
+  formula:
+    name: generate homebrew formula
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - shell: bash
+        run: |
+          echo "## Release ${GITHUB_REF_NAME}" >> $GITHUB_STEP_SUMMARY
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          url="https://github.com/wswenyue/aklog/archive/${TAG}.tar.gz"
+          wget -q -O aklog.tar.gz "${url}"
+          sha256=$(shasum -a 256 aklog.tar.gz | cut -d ' ' -f 1)
+          rm -f aklog.tar.gz
+          en_url=$(echo "$url" | sed 's#/#\\/#g')
+          sed -e "s/#_version_#/${VERSION}/g; s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" \
+            .github/data/aklog.rb > formula.rb
+          echo "- version: ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- tag: ${TAG}" >> $GITHUB_STEP_SUMMARY
+          echo "- sha256: ${sha256}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload formula
+        uses: actions/upload-artifact@v4
+        with:
+          name: formula
+          path: formula.rb
+
+  homebrew:
+    name: publish homebrew
+    needs: formula
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout homebrew-aklog
+        uses: actions/checkout@v4
+        with:
+          repository: wswenyue/homebrew-aklog
+          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          persist-credentials: true
+
+      - name: Download formula
+        uses: actions/download-artifact@v4
+        with:
+          name: formula
+
+      - name: Update Formula
+        run: |
+          cp formula.rb Formula/aklog.rb
+          rm -f formula.rb
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/aklog.rb
+          if git diff --cached --quiet; then
+            echo "No formula changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: update aklog to ${{ github.ref_name }}"
+          git push origin master

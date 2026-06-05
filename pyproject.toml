@@ -7,7 +7,7 @@ where = ["src"]
 
 [project]
 name = "aklog"
-version = "0.0.0.dev0"
+version = "5.3.25"
 description = "Android & HarmonyOS developer Swiss Army Knife for Log"
 readme = "README.md"
 requires-python = ">=3.9"

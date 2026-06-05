@@ -29,11 +29,11 @@ import re
 path = Path("pyproject.toml")
 text = path.read_text(encoding="utf-8")
 if re.search(r'^version\\s*=', text, re.M):
-    text = re.sub(r'^version\\s*=\\s*".*"', f'version = "{VERSION}"', text, count=1, flags=re.M)
+    text = re.sub(r'^version\\s*=\\s*".*"', 'version = "${VERSION}"', text, count=1, flags=re.M)
 else:
     text = text.replace(
         "[project]",
-        f'[project]\\nversion = "{VERSION}"',
+        '[project]\\nversion = "${VERSION}"',
         1,
     )
 path.write_text(text, encoding="utf-8")

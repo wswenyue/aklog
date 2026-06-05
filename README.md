@@ -26,7 +26,7 @@ Environment variables (optional):
 brew tap wswenyue/aklog && brew install aklog
 ```
 
-Homebrew installs [python@3.12](https://formulae.brew.sh/formula/python@3.12) and runs aklog with it (no extra pip dependencies).
+Uses system `python3` when available; otherwise Homebrew installs [python](https://formulae.brew.sh/formula/python) as a dependency (no extra pip packages).
 
 ### Update
 

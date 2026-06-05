@@ -2,19 +2,53 @@
 # Author: wswenyue.
 # Date & Time: 2018-11-05 18:59:31
 # Description: a bash script
-AK_DIR=exe_path
-if [ "$AK_DIR" = "exe_path" ]; then
-	AK_DIR="$(cd "$(dirname "$0")" && pwd)"
-fi
 
-has(){
-    type "$1" > /dev/null 2>&1
+AKLOG_PYTHON=__AKLOG_PYTHON__
+
+script_dir() {
+	local src="${BASH_SOURCE[0]:-$0}"
+	while [ -L "$src" ]; do
+		local dir
+		dir="$(cd -P "$(dirname "$src")" && pwd)"
+		src="$(readlink "$src")"
+		[[ "$src" != /* ]] && src="${dir}/${src}"
+	done
+	cd -P "$(dirname "$src")" && pwd
 }
 
-if has "python3"; then
-	PYTHONPATH="${AK_DIR}/src" python3 -m aklog "$@"
-elif has "python"; then
-	PYTHONPATH="${AK_DIR}/src" python -m aklog "$@"
-else
-	echo >&2 "Failed to execute, please install python before."
+resolve_ak_dir() {
+	local base
+	base="$(script_dir)"
+	if [ -d "${base}/src/aklog" ]; then
+		echo "${base}"
+		return 0
+	fi
+	if [ -d "${base}/../libexec/src/aklog" ]; then
+		cd "${base}/../libexec" && pwd
+		return 0
+	fi
+	echo "Failed to locate aklog package." >&2
+	return 1
+}
+
+run_aklog() {
+	local py="$1"
+	shift
+	PYTHONPATH="${AK_DIR}/src" exec "$py" -m aklog "$@"
+}
+
+AK_DIR="$(resolve_ak_dir)" || exit 1
+
+if [ "$AKLOG_PYTHON" != "__AKLOG_PYTHON__" ] && [ -x "$AKLOG_PYTHON" ]; then
+	run_aklog "$AKLOG_PYTHON" "$@"
 fi
+
+if py="$(command -v python3 2>/dev/null)" && [ -x "$py" ]; then
+	run_aklog "$py" "$@"
+fi
+if py="$(command -v python 2>/dev/null)" && [ -x "$py" ]; then
+	run_aklog "$py" "$@"
+fi
+
+echo >&2 "Failed to execute, please install python before."
+exit 1

@@ -4,7 +4,8 @@ class Aklog < Formula
   homepage "https://github.com/wswenyue/aklog"
   version "#_version_#"
 
-  depends_on "python"
+  # Use system python3 when available; otherwise install via Homebrew.
+  depends_on "python" if which("python3").nil? && which("python").nil?
 
   on_macos do
     on_arm do
@@ -17,13 +18,15 @@ class Aklog < Formula
     end
   end
 
+  def selected_python
+    which("python3") || which("python") || Formula["python"].opt_bin/"python3"
+  end
+
   def install
     libexec.install Dir["*"]
-    bin.install libexec/"aklog" => "aklog"
-    inreplace bin/"aklog", "exe_path", libexec.to_s
-    python = Formula["python"].opt_bin/"python3"
-    inreplace bin/"aklog", "python3 -m aklog", "#{python} -m aklog"
-    inreplace bin/"aklog", "python -m aklog", "#{python} -m aklog"
+    inreplace libexec/"aklog", /^AKLOG_PYTHON=__AKLOG_PYTHON__$/,
+                "AKLOG_PYTHON=#{selected_python}"
+    bin.install_symlink libexec/"aklog"
   end
 
   def post_install

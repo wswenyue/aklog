@@ -20,6 +20,7 @@ class TestAdbCmd:
         adb_bin = tmp_path / "adb"
         adb_bin.write_text("#!/bin/sh\n", encoding="utf-8")
         adb_bin.chmod(0o755)
+        monkeypatch.delenv("ANDROID_HOME", raising=False)
         monkeypatch.setattr("aklog.device.adb.bundled_tool", lambda name: str(tmp_path / name))
         assert AdbCmd.find_adb() == str(adb_bin)
 
@@ -56,6 +57,7 @@ class TestAdbHelper:
         adb_bin = tmp_path / "adb"
         adb_bin.write_text("#!/bin/sh\n", encoding="utf-8")
         adb_bin.chmod(0o755)
+        monkeypatch.delenv("ANDROID_HOME", raising=False)
         monkeypatch.setattr("aklog.device.adb.bundled_tool", lambda name: str(tmp_path / name))
         return AdbHelper(device_id=device_id)
 

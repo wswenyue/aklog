@@ -5,33 +5,170 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
+env:
+  # Release tarball + formula on_arm (Apple Silicon)
+  RELEASE_DARWIN_ARM64: "true"
+  # Release tarball + formula on_intel; set "true" when lib/darwin/x86_64/ is ready
+  RELEASE_DARWIN_X86_64: "false"
+
 jobs:
   quality:
     uses: ./.github/workflows/quality.yml
 
-  formula:
-    name: generate homebrew formula
+  prepare:
+    name: plan release architectures
     needs: quality
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - id: plan
+        run: |
+          set -euo pipefail
+          items=()
+          if [ "${RELEASE_DARWIN_ARM64}" = "true" ]; then
+            items+=('{"os":"darwin","arch":"arm64"}')
+          fi
+          if [ "${RELEASE_DARWIN_X86_64}" = "true" ]; then
+            items+=('{"os":"darwin","arch":"x86_64"}')
+          fi
+          if [ "${#items[@]}" -eq 0 ]; then
+            echo "No release architectures enabled (RELEASE_DARWIN_ARM64 / RELEASE_DARWIN_X86_64)." >&2
+            exit 1
+          fi
+          matrix=$(printf '%s\n' "${items[@]}" | jq -sc '.')
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "## Release architectures" >> "$GITHUB_STEP_SUMMARY"
+          echo "- RELEASE_DARWIN_ARM64: ${RELEASE_DARWIN_ARM64}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- RELEASE_DARWIN_X86_64: ${RELEASE_DARWIN_X86_64}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- package matrix: ${matrix}" >> "$GITHUB_STEP_SUMMARY"
+
+  package:
+    name: package ${{ matrix.os }}-${{ matrix.arch }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - shell: bash
+      - name: Build release archive
         run: |
-          echo "## Release ${GITHUB_REF_NAME}" >> $GITHUB_STEP_SUMMARY
-          TAG="${{ github.ref_name }}"
+          TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#v}"
-          url="https://github.com/wswenyue/aklog/archive/${TAG}.tar.gz"
-          wget -q -O aklog.tar.gz "${url}"
-          sha256=$(shasum -a 256 aklog.tar.gz | cut -d ' ' -f 1)
-          rm -f aklog.tar.gz
-          en_url=$(echo "$url" | sed 's#/#\\/#g')
-          sed -e "s/#_version_#/${VERSION}/g; s/#_url_#/${en_url}/g; s/#_sha256_#/${sha256}/g" \
-            .github/data/aklog.rb > formula.rb
-          echo "- version: ${VERSION}" >> $GITHUB_STEP_SUMMARY
-          echo "- tag: ${TAG}" >> $GITHUB_STEP_SUMMARY
-          echo "- sha256: ${sha256}" >> $GITHUB_STEP_SUMMARY
+          chmod +x scripts/build-release-archive.sh
+          scripts/build-release-archive.sh "${VERSION}" "${{ matrix.os }}" "${{ matrix.arch }}"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aklog-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            dist/aklog-*-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+            dist/aklog-*-${{ matrix.os }}-${{ matrix.arch }}.sha256
+
+  collect:
+    name: build release manifest
+    needs: [prepare, package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          pattern: aklog-darwin-*
+          merge-multiple: true
+
+      - name: Write release manifest
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          REPO="${GITHUB_REPOSITORY}"
+          BASE="https://github.com/${REPO}/releases/download/${TAG}"
+          packages=()
+          for arch in arm64 x86_64; do
+            tgz=(packages/aklog-"${VERSION}"-darwin-"${arch}".tar.gz)
+            sha_file=(packages/aklog-"${VERSION}"-darwin-"${arch}".sha256)
+            if [ ! -f "${tgz[0]}" ]; then
+              continue
+            fi
+            sha256="$(cat "${sha_file[0]}")"
+            file="$(basename "${tgz[0]}")"
+            url="${BASE}/${file}"
+            packages+=("$(jq -nc --arg os darwin --arg arch "${arch}" --arg file "${file}" --arg url "${url}" --arg sha256 "${sha256}" '{os:$os,arch:$arch,file:$file,url:$url,sha256:$sha256}')")
+          done
+          if [ "${#packages[@]}" -eq 0 ]; then
+            echo "No release packages found in artifacts." >&2
+            exit 1
+          fi
+          jq -nc \
+            --arg version "${VERSION}" \
+            --arg tag "${TAG}" \
+            --arg repo "${REPO}" \
+            --argjson packages "$(printf '%s\n' "${packages[@]}" | jq -sc '.')" \
+            '{version:$version,tag:$tag,repo:$repo,packages:$packages}' \
+            > release-manifest.json
+          cat release-manifest.json
+
+      - name: Upload manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: release-manifest.json
+
+  release:
+    name: publish GitHub release assets
+    needs: [prepare, package, collect]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: aklog-darwin-*
+          merge-multiple: true
+
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: dist/*.tar.gz
+
+  formula:
+    name: generate homebrew formula
+    needs: [release, collect]
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_DARWIN_ARM64: ${{ env.RELEASE_DARWIN_ARM64 }}
+      RELEASE_DARWIN_X86_64: ${{ env.RELEASE_DARWIN_X86_64 }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download release manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: release-manifest
+
+      - name: Generate formula
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          chmod +x scripts/generate-homebrew-formula.sh
+          scripts/generate-homebrew-formula.sh "${TAG}" "${GITHUB_REPOSITORY}" release-manifest.json formula.rb
+          echo "## Homebrew formula" >> "$GITHUB_STEP_SUMMARY"
+          echo "- version: ${TAG#v}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- RELEASE_DARWIN_ARM64: ${RELEASE_DARWIN_ARM64}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- RELEASE_DARWIN_X86_64: ${RELEASE_DARWIN_X86_64}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- on_arm: $([ "${RELEASE_DARWIN_ARM64}" = \"true\" ] && echo release tarball || echo source archive)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- on_intel: $([ "${RELEASE_DARWIN_X86_64}" = \"true\" ] && echo release tarball || echo source archive)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload formula
         uses: actions/upload-artifact@v4

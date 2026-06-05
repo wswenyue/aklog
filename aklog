@@ -3,6 +3,9 @@
 # Date & Time: 2018-11-05 18:59:31
 # Description: a bash script
 AK_DIR=exe_path
+if [ "$AK_DIR" = "exe_path" ]; then
+	AK_DIR="$(cd "$(dirname "$0")" && pwd)"
+fi
 
 has(){
     type "$1" > /dev/null 2>&1

@@ -363,7 +363,7 @@ echo -e "${GREEN}📋 操作摘要:${NC}"
 echo "  1. 创建 tag: ${NEW_VERSION}"
 echo "  2. 推送 tag 到远程: ${REMOTE}/${NEW_VERSION}"
 echo "  3. sync-version.sh → commit build_meta.py"
-echo "  4. 触发 GitHub Actions release.yml（quality 门禁 → Homebrew formula）"
+echo "  4. 触发 GitHub Actions release.yml（quality → macOS 架构包 → GitHub Release → Homebrew）"
 echo ""
 
 # 确认是否继续
@@ -444,7 +444,7 @@ echo "  - 旧版本: ${LATEST_TAG}"
 echo "  - 新版本: ${NEW_VERSION}"
 echo ""
 echo "下一步:"
-echo "  - GitHub Actions release.yml 将运行 quality 门禁并更新 homebrew-aklog Formula"
+echo "  - release.yml：打包 lib/darwin/*（见 RELEASE_DARWIN_* 开关，默认仅 arm64）→ GitHub Release → homebrew-aklog Formula"
 echo "  - 查看部署状态: https://github.com/$(git remote get-url ${REMOTE} | sed -E 's/.*[:/]([^/]+\/[^/]+)\.git/\1/')/actions"
 echo ""
 

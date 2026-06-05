@@ -2,11 +2,20 @@
 class Aklog < Formula
   desc "Android & HarmonyOS developer's Swiss Army Knife for Log"
   homepage "https://github.com/wswenyue/aklog"
-  url "#_url_#"
-  sha256 "#_sha256_#"
-  version '#_version_#'
+  version "#_version_#"
 
   depends_on "python@3.12"
+
+  on_macos do
+    on_arm do
+      url "#_url_darwin_arm64_#"
+      sha256 "#_sha256_darwin_arm64_#"
+    end
+    on_intel do
+      url "#_url_darwin_x86_64_#"
+      sha256 "#_sha256_darwin_x86_64_#"
+    end
+  end
 
   def install
     libexec.install Dir["*"]

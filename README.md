@@ -8,12 +8,12 @@ Android & HarmonyOS developer's Swiss Army Knife for Log
 
 - **Python 3.9+**
 
-Bundled tools (optional; SDK environment variables take precedence):
+Bundled tools on macOS (optional; SDK environment variables take precedence):
 
-- `lib/<os>/<arch>/adb` — Android Debug Bridge
-- `lib/<os>/<arch>/hdc` — HarmonyOS Device Connector
+- `lib/darwin/arm64/adb`, `lib/darwin/arm64/hdc` — Apple Silicon
+- `lib/darwin/x86_64/adb`, `lib/darwin/x86_64/hdc` — Intel Mac
 
-See [lib/README.md](lib/README.md) for per-arch layout.
+See [lib/README.md](lib/README.md). On Linux/Windows use `ANDROID_HOME` / `HARMONY_HOME`.
 
 Environment variables (optional):
 
@@ -66,7 +66,7 @@ When multiple USB devices are connected (adb and/or hdc), aklog prompts for sele
 aklog/                  # bash launcher (PYTHONPATH=src, python -m aklog)
 release.sh              # semver tag release → triggers release.yml
 scripts/sync-version.sh # writes build_meta.py + pyproject version before tag
-lib/<os>/<arch>/        # bundled adb / hdc (see lib/README.md)
+lib/darwin/{arm64,x86_64}/  # bundled adb / hdc for Homebrew (see lib/README.md)
 src/aklog/
   build_meta.py         # version constants (generated at release)
   cli/                  # argparse & main dispatch
@@ -94,7 +94,11 @@ make ci                    # same gates as CI / release workflow
 ./release.sh               # default patch bump; use -i for major/minor
 ```
 
-Flow: `release.sh` → `sync-version.sh` → commit `build_meta.py` → push tag `vX.Y.Z` → GitHub Actions `release.yml` (quality → Homebrew formula).
+Flow: `release.sh` → `sync-version.sh` → commit `build_meta.py` → push tag `vX.Y.Z` → GitHub Actions `release.yml` (quality → per-arch tarballs → GitHub Release → Homebrew formula).
+
+Release workflow switches in [`.github/workflows/release.yml`](.github/workflows/release.yml) (`RELEASE_DARWIN_ARM64` / `RELEASE_DARWIN_X86_64`). **Default: only ARM64** release assets; Apple Silicon Homebrew uses the release tarball, Intel Mac still uses the source archive until `RELEASE_DARWIN_X86_64` is enabled and `lib/darwin/x86_64/` is populated.
+
+Local package dry-run: `scripts/build-release-archive.sh <version> darwin arm64`
 
 ### Development
 

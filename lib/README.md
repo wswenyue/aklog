@@ -1,18 +1,19 @@
-# Bundled platform tools
+# Bundled macOS tools (Homebrew release)
 
-Place per-OS/arch binaries under:
+Place per-arch binaries under:
 
 ```text
-lib/<os>/<arch>/
-  adb              # Android (optional; ANDROID_HOME overrides)
-  hdc              # HarmonyOS (optional; HARMONY_HOME overrides)
-  libusb_shared.dylib   # macOS hdc dependency, if needed
+lib/darwin/<arch>/
+  adb                   # Android (optional; ANDROID_HOME overrides)
+  hdc                   # HarmonyOS (optional; HARMONY_HOME overrides)
+  libusb_shared.dylib   # hdc dependency, if needed
 ```
 
-| OS | Arch directory | Examples |
-|----|----------------|----------|
-| macOS | `darwin/arm64`, `darwin/x86_64` | `adb`, `hdc`, `*.dylib` |
-| Linux | `linux/aarch64`, `linux/x86_64` | `adb`, `hdc` |
-| Windows | `windows/arm64`, `windows/x86_64` | `adb.exe`, `hdc.exe` |
+| Arch directory | CPU |
+|----------------|-----|
+| `darwin/arm64` | Apple Silicon |
+| `darwin/x86_64` | Intel Mac |
 
-Legacy flat layout (`lib/adb`, `lib/hdc`) is still supported as a fallback.
+Legacy flat layout (`lib/adb`, `lib/hdc`) is still supported as a fallback at runtime.
+
+Non-macOS: use `ANDROID_HOME` / `HARMONY_HOME` instead of bundled tools.

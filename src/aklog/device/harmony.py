@@ -100,6 +100,18 @@ class HarmonyPlatform(DevicePlatform):
                 return match.group(1).strip()
         return ""
 
+    @staticmethod
+    def _looks_like_bundle_name(name):
+        if comm_tools.is_empty(name) or "/" in name or name.startswith("["):
+            return False
+        base = name.split(":", 1)[0]
+        if "." not in base:
+            return False
+        for suffix in (".elf", ".ko", ".so"):
+            if base.endswith(suffix):
+                return False
+        return True
+
     def iter_processes(self):
         try:
             out = self._helper.run_cmd("shell ps -ef")
@@ -111,11 +123,12 @@ class HarmonyPlatform(DevicePlatform):
                 is_skip = False
                 continue
             ls = line.strip().split()
-            if len(ls) < 9:
+            # Harmony ps -ef: UID PID PPID C STIME TTY TIME CMD
+            if len(ls) < 8:
                 continue
             pid = ls[1]
-            name = ls[-1]
-            if "/" in name or name.startswith("["):
+            name = ls[7]
+            if not self._looks_like_bundle_name(name):
                 continue
             yield pid, name
 

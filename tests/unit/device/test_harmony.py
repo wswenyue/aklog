@@ -33,13 +33,21 @@ class TestHarmonyPlatform:
         platform._helper = MagicMock()
         platform._helper.run_cmd.return_value = "\n".join(
             [
-                "UID PID PPID C STIME TTY TIME CMD ARG",
-                "1000 100 1 0 00:00:00 ? 00:00:00 sh com.demo.hap",
-                "1000 101 1 0 00:00:00 ? 00:00:00 sh com.demo.hap:ui",
+                "UID             PID   PPID C STIME TTY          TIME CMD",
+                "20020227      55477    607 0 21:05:44 ?     00:00:25 com.demo.hap",
+                "20020227      55478    607 0 21:05:44 ?     00:00:01 com.demo.hap:ui",
+                "root             67     63 5 12:01:16 ?     02:31:30 devhost.elf /lib/libdh-linux.so",
             ]
         )
         processes = list(platform.iter_processes())
-        assert ("100", "com.demo.hap") in processes
+        assert ("55477", "com.demo.hap") in processes
+        assert ("55478", "com.demo.hap:ui") in processes
+
+    def test_looks_like_bundle_name(self):
+        assert HarmonyPlatform._looks_like_bundle_name("com.demo.hap") is True
+        assert HarmonyPlatform._looks_like_bundle_name("com.demo.hap:ui") is True
+        assert HarmonyPlatform._looks_like_bundle_name("crypto.elf") is False
+        assert HarmonyPlatform._looks_like_bundle_name("init") is False
 
     def test_phone_tmp_dir_and_ext(self):
         platform = HarmonyPlatform("t1")

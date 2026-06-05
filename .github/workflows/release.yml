@@ -13,7 +13,41 @@ env:
 
 jobs:
   quality:
-    uses: ./.github/workflows/quality.yml
+    name: lint, typecheck, test, smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: python -m ruff check src tests
+
+      - name: Ruff format check
+        run: python -m ruff format --check src tests
+
+      - name: Mypy
+        run: python -m mypy src/aklog
+
+      - name: Pytest with coverage
+        run: python -m pytest tests --cov=aklog --cov-report=term-missing --cov-fail-under=75
+
+      - name: Smoke (CLI import and launcher)
+        run: |
+          PYTHONPATH=src python -m aklog --version
+          PYTHONPATH=src python -m aklog -h
+          test -x aklog
+          bash -n aklog
+          PYTHONPATH=src python -c "from aklog.build_meta import __version__; assert __version__"
 
   prepare:
     name: plan release architectures

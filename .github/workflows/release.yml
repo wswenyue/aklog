@@ -146,9 +146,6 @@ jobs:
     name: generate homebrew formula
     needs: [release, collect]
     runs-on: ubuntu-latest
-    env:
-      RELEASE_DARWIN_ARM64: ${{ env.RELEASE_DARWIN_ARM64 }}
-      RELEASE_DARWIN_X86_64: ${{ env.RELEASE_DARWIN_X86_64 }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

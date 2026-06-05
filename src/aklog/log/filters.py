@@ -91,7 +91,7 @@ class LogTagFilterFormat(IBaseFilterFormat):
         if self.tag_not:
             if self.is_tag_not_fuzzy:
                 for tagN in self.tag_not:
-                    if tagN in tag:
+                    if comm_tools.match_str(tagN, tag, is_exact=False, is_ignore_case=True):
                         return False
             else:
                 if tag.strip() in self.tag_not:
@@ -101,11 +101,10 @@ class LogTagFilterFormat(IBaseFilterFormat):
             return True
         if self.is_exact:
             return tag in self.target
-        else:
-            for _tag in self.target:
-                if _tag in tag:
-                    return True
-            return False
+        for _tag in self.target:
+            if comm_tools.match_str(_tag, tag, is_exact=False, is_ignore_case=True):
+                return True
+        return False
 
 
 class LogMsgFilterFormat(IBaseFilterFormat):

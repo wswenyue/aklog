@@ -57,10 +57,18 @@ class TestLogTagFilter:
         assert flt.filter("MyTag") is True
         assert flt.filter("MyTagExtra") is False
 
+    def test_fuzzy_tag_ignore_case(self):
+        flt = LogTagFilterFormat(target=["router"])
+        assert flt.filter("Router") is True
+        assert flt.filter("ROUTER") is True
+        assert flt.filter("MyRouter") is True
+        assert flt.filter("other") is False
+
     def test_fuzzy_tag_not(self):
         flt = LogTagFilterFormat(tag_not=["Noise"], is_tag_not_fuzzy=True)
         assert flt.filter("CleanTag") is True
         assert flt.filter("NoiseTag") is False
+        assert flt.filter("noisetag") is False
 
 
 class TestLogMsgFilter:

@@ -4,173 +4,238 @@ Android & HarmonyOS developer's Swiss Army Knife for Log
 
 ![示例](./res/demo.jpg)
 
-### Requirements
+### 环境要求
 
-- **Python 3.9+**
-- **rich** (installed automatically via `pip install` / Homebrew `post_install`)
+通过 Homebrew 安装时，Python 与运行时依赖（`rich`、`argcomplete` 等）会自动处理，无需手动准备。
 
-Bundled tools on macOS (optional; SDK environment variables take precedence):
+macOS 内置工具（可选；若已设置 SDK 环境变量则优先使用 SDK）：
 
-- `lib/darwin/arm64/adb`, `lib/darwin/arm64/hdc` — Apple Silicon
-- `lib/darwin/x86_64/adb`, `lib/darwin/x86_64/hdc` — Intel Mac
+- `lib/darwin/arm64/adb`、`lib/darwin/arm64/hdc` — Apple Silicon
+- `lib/darwin/x86_64/adb`、`lib/darwin/x86_64/hdc` — Intel Mac
 
-See [lib/README.md](lib/README.md). On Linux/Windows use `ANDROID_HOME` / `HARMONY_HOME`.
+详见 [lib/README.md](lib/README.md)。Linux / Windows 请配置 `ANDROID_HOME` / `HARMONY_HOME`。
 
-Environment variables (optional):
+环境变量（可选）：
 
-- `ANDROID_HOME` — use SDK `platform-tools/adb` instead of bundled `adb`
-- `HARMONY_HOME` — use SDK `hdc` instead of bundled `hdc`
+- `ANDROID_HOME` — 使用 SDK 中的 `platform-tools/adb`，而非内置 `adb`
+- `HARMONY_HOME` — 使用 SDK 中的 `hdc`，而非内置 `hdc`
 
-### Installation
+### 安装
 
 ```shell
 brew tap wswenyue/aklog && brew install aklog
 ```
 
-Uses system `python3` when available; otherwise Homebrew installs [python](https://formulae.brew.sh/formula/python) as a dependency. Runtime Python packages (`rich`, `argcomplete`, `tomli` on Python &lt; 3.11) are installed automatically during `brew install`.
+优先使用系统自带的 `python3`；若未安装，Homebrew 会自动安装 [python](https://formulae.brew.sh/formula/python) 作为依赖。运行时 Python 包（`rich`、`argcomplete`，以及 Python &lt; 3.11 下的 `tomli`）会在 `brew install` 时自动安装。
 
-### Shell completion
+### Shell 补全
 
-Tab completion is powered by [argcomplete](https://github.com/kislyuk/argcomplete). It completes subcommands, options, log levels, and connected device IDs (`-d`).
+Tab 补全由 [argcomplete](https://github.com/kislyuk/argcomplete) 提供，可补全子命令、选项、日志级别，以及已连接设备的 ID（`-d`）。
 
-**Homebrew (recommended):** shell completion is installed automatically:
+**Homebrew：** 安装时自动配置 Shell 补全：
 
-- zsh → `share/zsh/site-functions/_aklog` (restart shell after `brew install aklog`)
-- bash → `etc/bash_completion.d/aklog` (requires [bash-completion](https://formulae.brew.sh/formula/bash-completion); add `[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"` to `~/.bash_profile` if not already enabled)
+- zsh → `share/zsh/site-functions/_aklog`（`brew install aklog` 后重启 Shell）
+- bash → `etc/bash_completion.d/aklog`（需要 [bash-completion](https://formulae.brew.sh/formula/bash-completion)；若尚未启用，请在 `~/.bash_profile` 中加入 `[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"`）
 
-**Oh My Zsh:**
-
-```shell
-git clone https://github.com/wswenyue/aklog.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/aklog
-# ~/.zshrc
-plugins=(... aklog)
-```
-
-Or source the bundled plugin when running from a local checkout:
-
-```shell
-source /path/to/aklog/contrib/zsh/aklog.plugin.zsh
-```
-
-**Zsh (manual / from source):**
-
-```shell
-# ~/.zshrc
-fpath=(/path/to/aklog/contrib/zsh $fpath)
-autoload -U compinit && compinit
-```
-
-**Bash (manual / from source):**
-
-```shell
-source /path/to/aklog/contrib/bash/aklog   # or add eval line below to ~/.bashrc
-```
-
-**Zsh / Bash (one-liner):**
-
-```shell
-eval "$(register-python-argcomplete aklog)"   # add to ~/.zshrc or ~/.bashrc
-```
-
-If completion does not work on an older setup, try `autoload -U bashcompinit && bashcompinit` before the `eval` line.
-
-Device ID completion (`-d`) requires adb/hdc tools and at least one connected device.
-
-### Update
+### 更新
 
 ```shell
 brew upgrade aklog
 ```
 
-### Usage
+### 用法
 
 ```shell
 aklog -h
-aklog -d <device_id> -pc          # specify device, filter foreground app
-aklog cap-screen                   # screenshot
-aklog record-video                 # screen record (Ctrl+C to stop)
-aklog dump-log                     # dump crash logs
-aklog install -path ./app.hap      # install hap/apk
-aklog config init                  # create user color config
-aklog config path                  # show config file path
+aklog -d <device_id> -pc          # 指定设备，过滤前台应用日志
+aklog cap-screen                   # 截图
+aklog record-video                 # 录屏（Ctrl+C 停止）
+aklog dump-log                     # 导出崩溃日志
+aklog install -path ./app.hap      # 安装 hap/apk
+aklog config init                  # 创建用户配色配置
+aklog config path                  # 显示配置文件路径
 ```
 
-When multiple USB devices are connected (adb and/or hdc), aklog prompts for selection unless `-d` is provided.
+多台 USB 设备同时连接（adb 和/或 hdc）时，若未指定 `-d`，aklog 会提示选择设备。
 
-### Configuration
+### 配置
 
-User settings are stored at `~/.config/aklog/config.toml` (or `%APPDATA%\aklog\config.toml` on Windows).
+用户配置保存在 `~/.config/aklog/config.toml`（Windows 为 `%APPDATA%\aklog\config.toml`）。
 
 ```shell
-aklog config init      # generate default color theme
-aklog config path      # print config location
+aklog config init      # 生成默认配色主题
+aklog config path      # 打印配置文件路径
 ```
 
-Edit `[colors]` to customize log level colors. Rich color names (`green`, `bright_blue`, `#ff6600`, etc.) are supported. Invalid values fall back to built-in defaults.
+编辑 `[colors]` 可自定义各级别日志颜色。支持 [Rich](https://rich.readthedocs.io/en/stable/appendix/colors.html) 颜色名（如 `green`、`bright_blue`）及十六进制色值（如 `#ff6600`）。无效值会自动回退到内置默认配色。
 
-### Platforms
+每个日志级别包含两个颜色字段：
 
-| Feature | Android (adb) | HarmonyOS (hdc) |
-|---------|---------------|-----------------|
-| Log stream | logcat | hilog |
-| Foreground filter | dumpsys | aa dump |
-| Screenshot | screencap | snapshot_display |
-| Record | screenrecord | system screenrecorder |
-| Crash dump | dropbox | faultlogger |
-| Install | adb install | hdc install |
+| 字段 | 说明 |
+|------|------|
+| `base` | 级别标签底色（如 `DEBUG`、`INFO`） |
+| `tag` | 日志 Tag 与消息正文颜色 |
 
-**Note:** HarmonyOS screen recording requires an unlocked physical device and system screen recorder service.
+#### 常用 Rich 颜色名
 
-### Project layout
+**基础色（16 色）：**
 
+| 颜色名 | 说明 | 颜色名 | 说明 |
+|--------|------|--------|------|
+| `black` | 黑 | `white` | 白 |
+| `red` | 红 | `bright_red` | 亮红 |
+| `green` | 绿 | `bright_green` | 亮绿 |
+| `yellow` | 黄 | `bright_yellow` | 亮黄 |
+| `blue` | 蓝 | `bright_blue` | 亮蓝 |
+| `magenta` | 品红 | `bright_magenta` | 亮品红 |
+| `cyan` | 青 | `bright_cyan` | 亮青 |
+
+**灰色系：**
+
+| 颜色名 | 说明 |
+|--------|------|
+| `grey0` ~ `grey100` | 灰度渐变（数字越大越浅） |
+| `grey50` | 中灰（默认 meta 色） |
+| `grey62` | 浅灰（默认 verbose tag 色） |
+
+**常用扩展色（X11）：**
+
+| 颜色名 | 色调 | 颜色名 | 色调 |
+|--------|------|--------|------|
+| `dark_sea_green2` | 暗海绿 | `spring_green2` | 春绿 |
+| `steel_blue3` | 钢蓝 | `indian_red` | 印度红 |
+| `dark_goldenrod` | 暗金 | `orange3` | 橙 |
+| `purple3` | 紫 | `violet` | 紫罗兰 |
+| `deep_pink3` | 深粉 | `turquoise2` | 青绿 |
+
+**十六进制色值：**
+
+任意 `#RRGGBB` 格式均可使用，例如 `#ff6600`（橙）、`#00bcd4`（青）、`#e91e63`（粉）。
+
+#### 预设配色方案
+
+以下方案可直接复制到 `config.toml` 的 `[colors]` 段落中使用。
+
+**默认（内置）：**
+
+```toml
+[colors]
+meta = "grey50"
+level_style = "bold"
+tag_style = "bold underline"
+msg_style = "bold"
+
+[colors.verbose]
+base = "grey50"
+tag = "grey62"
+
+[colors.debug]
+base = "dark_sea_green2"
+tag = "spring_green2"
+
+[colors.info]
+base = "steel_blue3"
+tag = "bright_blue"
+
+[colors.warn]
+base = "dark_goldenrod"
+tag = "bright_yellow"
+
+[colors.error]
+base = "indian_red"
+tag = "bright_red"
 ```
-aklog/                  # bash launcher (PYTHONPATH=src, python -m aklog)
-release.sh              # semver tag release → triggers release.yml
-scripts/sync-version.sh # writes build_meta.py + pyproject version before tag
-lib/darwin/{arm64,x86_64}/  # bundled adb / hdc for Homebrew (see lib/README.md)
-src/aklog/
-  build_meta.py         # version constants (generated at release)
-  cli/                  # argparse & main dispatch
-  core/                 # comm_tools, cmd_runner, config, console, paths
-  device/               # platform abstraction (android / harmony), adb, hdc
-  log/                  # parser, filters, printer
-  app/                  # foreground app / process info
-  tools/                # cap-screen, record-video, dump-log
+
+**高对比（深色终端友好）：**
+
+```toml
+[colors]
+meta = "grey62"
+
+[colors.verbose]
+base = "grey50"
+tag = "grey70"
+
+[colors.debug]
+base = "green"
+tag = "bright_green"
+
+[colors.info]
+base = "blue"
+tag = "bright_cyan"
+
+[colors.warn]
+base = "yellow"
+tag = "bright_yellow"
+
+[colors.error]
+base = "red"
+tag = "bright_red"
 ```
 
-Run from source:
+**柔和（护眼）：**
 
-```shell
-pip install -e ".[dev]"
-PYTHONPATH=src python3 -m aklog --version
-# or after brew install:
-aklog --version
+```toml
+[colors]
+meta = "grey58"
+
+[colors.verbose]
+base = "grey50"
+tag = "grey62"
+
+[colors.debug]
+base = "dark_sea_green3"
+tag = "aquamarine1"
+
+[colors.info]
+base = "steel_blue"
+tag = "deepskyblue1"
+
+[colors.warn]
+base = "dark_goldenrod2"
+tag = "gold1"
+
+[colors.error]
+base = "indian_red1"
+tag = "light_coral"
 ```
 
-### Release (maintainers)
+**Material 风格：**
 
-```shell
-git checkout master && git pull
-make ci                    # same gates as CI / release workflow
-./release.sh               # default patch bump; use -i for major/minor
+```toml
+[colors]
+meta = "#9e9e9e"
+
+[colors.verbose]
+base = "#757575"
+tag = "#bdbdbd"
+
+[colors.debug]
+base = "#388e3c"
+tag = "#69f0ae"
+
+[colors.info]
+base = "#1976d2"
+tag = "#40c4ff"
+
+[colors.warn]
+base = "#f57c00"
+tag = "#ffd740"
+
+[colors.error]
+base = "#c62828"
+tag = "#ff5252"
 ```
 
-Flow: `release.sh` → `sync-version.sh` → commit `build_meta.py` → push tag `vX.Y.Z` → GitHub Actions `release.yml` (quality → per-arch tarballs → GitHub Release → Homebrew formula).
+### 平台对照
 
-Release workflow switches in [`.github/workflows/release.yml`](.github/workflows/release.yml) (`RELEASE_DARWIN_ARM64` / `RELEASE_DARWIN_X86_64`). **Default: only ARM64** release assets; Apple Silicon Homebrew uses the release tarball, Intel Mac still uses the source archive until `RELEASE_DARWIN_X86_64` is enabled and `lib/darwin/x86_64/` is populated.
+| 功能 | Android (adb) | HarmonyOS (hdc) |
+|------|---------------|-----------------|
+| 日志流 | logcat | hilog |
+| 前台过滤 | dumpsys | aa dump |
+| 截图 | screencap | snapshot_display |
+| 录屏 | screenrecord | system screenrecorder |
+| 崩溃导出 | dropbox | faultlogger |
+| 安装 | adb install | hdc install |
 
-Local package dry-run: `scripts/build-release-archive.sh <version> darwin arm64`
-
-### Development
-
-```shell
-pip install -e ".[dev]"
-make test          # unit tests
-make test-cov      # tests + coverage (≥75%)
-make lint          # ruff
-make typecheck     # mypy
-make smoke         # CLI --version / -h, launcher syntax
-make ci            # lint + typecheck + test-cov + smoke
-```
-
-Coverage threshold is **75%** (enforced in CI). Tests mock adb/hdc; no physical device required.
+**说明：** HarmonyOS 录屏需要已解锁的实体设备，且系统录屏服务可用。

@@ -6,12 +6,13 @@ import argparse
 
 from aklog.build_meta import GIT_TAG
 from aklog.core import comm_tools
-from aklog.log.filters import (
-    LogLevelFilterFormat,
-    LogMsgFilterFormat,
-    LogPackageFilterFormat,
-    LogTagFilterFormat,
-    PackageFilterType,
+from aklog.log.filter import (
+    FilterChain,
+    LevelFilter,
+    MsgProcessor,
+    PackageFilter,
+    PackageMode,
+    TagFilter,
 )
 from aklog.log.format import JsonValueFormat
 from aklog.log.info import LogLevelHelper
@@ -29,6 +30,21 @@ def _to_str_arr(obj):
     return result
 
 
+class ChineseArgumentParser(argparse.ArgumentParser):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("add_help", False)
+        super().__init__(*args, **kwargs)
+        self._optionals.title = "可选参数"
+        self._positionals.title = "位置参数"
+        self.add_argument(
+            "-h",
+            "--help",
+            action="help",
+            default=argparse.SUPPRESS,
+            help="显示帮助信息并退出",
+        )
+
+
 class AkLogCli:
     dest_version = "version"
     dest_device = "device"
@@ -38,10 +54,12 @@ class AkLogCli:
     dest_package_not = "package_not"
     dest_tag = "tag"
     dest_tag_not = "tag_not"
-    dest_tag_not_fuzzy = "tag_not_fuzzy"
+    dest_tag_not_exact = "tag_not_exact"
     dest_tag_exact = "tag_exact"
     dest_msg = "msg"
     dest_msg_not = "msg_not"
+    dest_msg_not_exact = "msg_not_exact"
+    dest_msg_exact = "msg_exact"
     dest_msg_json_value = "msg_json_value"
     dest_level = "level"
     dest_cmd = "cmd"
@@ -56,21 +74,21 @@ class AkLogCli:
             "-pc",
             "--" + self.dest_package_current_top,
             dest=self.dest_package_current_top,
-            help="Match logs for current foreground app (default when no package filter)",
+            help="匹配当前前台应用日志（未指定包名过滤时默认）",
             action="store_true",
         )
         args_package.add_argument(
             "-pa",
             "--" + self.dest_package_all,
             dest=self.dest_package_all,
-            help="Show logs from all packages",
+            help="显示所有应用的日志",
             action="store_true",
         )
         args_package.add_argument(
             "-p",
             "--" + self.dest_package,
             dest=self.dest_package,
-            help="Match specified package name(s)",
+            help="匹配指定包名（可多个）",
             type=str,
             nargs="+",
         )
@@ -78,7 +96,7 @@ class AkLogCli:
             "-pn",
             "--" + self.dest_package_not,
             dest=self.dest_package_not,
-            help="Exclude specified package name(s)",
+            help="排除包含指定包名的日志（模糊匹配）",
             type=str,
             nargs="+",
         )
@@ -88,151 +106,210 @@ class AkLogCli:
             return
         args[self.dest_package_current_top] = True
 
-    def _parser_args_package(self, args):
+    def _build_package_filter(self, args):
         if args[self.dest_package]:
-            return LogPackageFilterFormat(PackageFilterType.TARGET, _to_str_arr(args[self.dest_package]))
+            return PackageFilter(PackageMode.TARGET, _to_str_arr(args[self.dest_package]))
         if args[self.dest_package_not]:
-            return LogPackageFilterFormat(PackageFilterType.EXCLUDE, _to_str_arr(args[self.dest_package_not]))
+            return PackageFilter(PackageMode.EXCLUDE, _to_str_arr(args[self.dest_package_not]))
         if args[self.dest_package_all]:
-            return LogPackageFilterFormat(PackageFilterType.All)
+            return PackageFilter(PackageMode.ALL)
         if args[self.dest_package_current_top]:
-            return LogPackageFilterFormat(PackageFilterType.Top)
-        return LogPackageFilterFormat(PackageFilterType.Top)
+            return PackageFilter(PackageMode.TOP)
+        return PackageFilter(PackageMode.TOP)
 
     def _define_args_tag(self, args_parser):
-        args_tag_not_group = args_parser.add_mutually_exclusive_group()
-        args_tag_not_group.add_argument(
-            "-tnf",
-            "--" + self.dest_tag_not_fuzzy,
-            dest=self.dest_tag_not_fuzzy,
-            help="Fuzzy exclude tags",
+        args_parser.add_argument(
+            "-tn",
+            "--" + self.dest_tag_not,
+            dest=self.dest_tag_not,
+            help="排除包含指定 tag 的日志（忽略大小写模糊匹配，规则同 -t）",
             type=str,
             nargs="+",
         )
-        args_tag_not_group.add_argument(
-            "-tn", "--" + self.dest_tag_not, dest=self.dest_tag_not, help="Exclude tags", type=str, nargs="+"
+        args_parser.add_argument(
+            "-ten",
+            "--" + self.dest_tag_not_exact,
+            dest=self.dest_tag_not_exact,
+            help="排除精确匹配的 tag（规则同 -te）",
+            type=str,
+            nargs="+",
         )
         args_tags = args_parser.add_mutually_exclusive_group()
-        args_tags.add_argument("-t", "--" + self.dest_tag, dest=self.dest_tag, help="Match tags", type=str, nargs="+")
         args_tags.add_argument(
-            "-te", "--" + self.dest_tag_exact, dest=self.dest_tag_exact, help="Exact match tags", type=str, nargs="+"
+            "-t",
+            "--" + self.dest_tag,
+            dest=self.dest_tag,
+            help="匹配 tag（忽略大小写模糊匹配，包含即接受）",
+            type=str,
+            nargs="+",
+        )
+        args_tags.add_argument(
+            "-te",
+            "--" + self.dest_tag_exact,
+            dest=self.dest_tag_exact,
+            help="精确匹配 tag",
+            type=str,
+            nargs="+",
         )
 
-    def _parser_args_tag(self, args):
-        tag_not_array = None
-        is_tag_not_fuzzy = False
+    def _build_tag_filter(self, args):
+        exclude_fuzzy = None
+        exclude_exact = None
         if args[self.dest_tag_not]:
-            tag_not_array = _to_str_arr(args[self.dest_tag_not])
-        elif args[self.dest_tag_not_fuzzy]:
-            tag_not_array = _to_str_arr(args[self.dest_tag_not_fuzzy])
-            is_tag_not_fuzzy = True
-        if comm_tools.is_empty(tag_not_array):
-            tag_not_array = None
+            exclude_fuzzy = _to_str_arr(args[self.dest_tag_not]) or None
+        if args[self.dest_tag_not_exact]:
+            exclude_exact = _to_str_arr(args[self.dest_tag_not_exact]) or None
+        if comm_tools.is_empty(exclude_fuzzy):
+            exclude_fuzzy = None
+        if comm_tools.is_empty(exclude_exact):
+            exclude_exact = None
         if args[self.dest_tag]:
-            return LogTagFilterFormat(
-                target=_to_str_arr(args[self.dest_tag]),
-                tag_not=tag_not_array,
-                is_exact=False,
-                is_tag_not_fuzzy=is_tag_not_fuzzy,
+            return TagFilter(
+                include=_to_str_arr(args[self.dest_tag]),
+                exact=False,
+                exclude_fuzzy=exclude_fuzzy,
+                exclude_exact=exclude_exact,
             )
         if args[self.dest_tag_exact]:
-            return LogTagFilterFormat(
-                target=_to_str_arr(args[self.dest_tag_exact]),
-                tag_not=tag_not_array,
-                is_exact=True,
-                is_tag_not_fuzzy=is_tag_not_fuzzy,
+            return TagFilter(
+                include=_to_str_arr(args[self.dest_tag_exact]),
+                exact=True,
+                exclude_fuzzy=exclude_fuzzy,
+                exclude_exact=exclude_exact,
             )
-        return LogTagFilterFormat(tag_not=tag_not_array, is_tag_not_fuzzy=is_tag_not_fuzzy)
+        return TagFilter(exclude_fuzzy=exclude_fuzzy, exclude_exact=exclude_exact)
 
     def _define_args_msg(self, args_parser):
         args_parser.add_argument(
             "-mn",
             "--" + self.dest_msg_not,
             dest=self.dest_msg_not,
-            help="Exclude message keywords",
+            help="排除包含指定关键词的消息（忽略大小写模糊匹配，规则同 -m）",
+            type=str,
+            nargs="+",
+        )
+        args_parser.add_argument(
+            "-men",
+            "--" + self.dest_msg_not_exact,
+            dest=self.dest_msg_not_exact,
+            help="排除精确匹配的消息（规则同 -me）",
             type=str,
             nargs="+",
         )
         args_msg = args_parser.add_mutually_exclusive_group()
         args_msg.add_argument(
-            "-m", "--" + self.dest_msg, dest=self.dest_msg, help="Match message keywords", type=str, nargs="+"
+            "-m",
+            "--" + self.dest_msg,
+            dest=self.dest_msg,
+            help="匹配消息关键词（忽略大小写模糊匹配，包含即接受）",
+            type=str,
+            nargs="+",
+        )
+        args_msg.add_argument(
+            "-me",
+            "--" + self.dest_msg_exact,
+            dest=self.dest_msg_exact,
+            help="精确匹配消息",
+            type=str,
+            nargs="+",
         )
         args_msg.add_argument(
             "-mjson",
             "--" + self.dest_msg_json_value,
             dest=self.dest_msg_json_value,
-            help="Match JSON keys in log message",
+            help="匹配日志消息中的 JSON 键",
             type=str,
             nargs="+",
         )
 
-    def _parser_args_msg(self, args):
-        msg_not_array = None
+    def _build_msg_processor(self, args):
+        exclude_fuzzy = None
+        exclude_exact = None
         if args[self.dest_msg_not]:
-            _array = _to_str_arr(args[self.dest_msg_not])
-            if comm_tools.is_not_empty(_array):
-                msg_not_array = _array
+            exclude_fuzzy = _to_str_arr(args[self.dest_msg_not]) or None
+        if args[self.dest_msg_not_exact]:
+            exclude_exact = _to_str_arr(args[self.dest_msg_not_exact]) or None
+        if comm_tools.is_empty(exclude_fuzzy):
+            exclude_fuzzy = None
+        if comm_tools.is_empty(exclude_exact):
+            exclude_exact = None
+        common = {"exclude_fuzzy": exclude_fuzzy, "exclude_exact": exclude_exact}
         if args[self.dest_msg_json_value]:
             _array = _to_str_arr(args[self.dest_msg_json_value])
             if comm_tools.is_empty(_array):
                 raise ValueError("msg filter -mjson empty value!!")
-            return LogMsgFilterFormat(msg_not=msg_not_array, json_format=JsonValueFormat(_keys=_array))
+            return MsgProcessor(json_format=JsonValueFormat(_keys=_array), **common)
         if args[self.dest_msg]:
             _array = _to_str_arr(args[self.dest_msg])
             if comm_tools.is_empty(_array):
                 raise ValueError("msg filter -m empty value!!")
-            return LogMsgFilterFormat(target=_array, msg_not=msg_not_array)
-        return LogMsgFilterFormat(msg_not=msg_not_array)
+            return MsgProcessor(include=_array, exact=False, **common)
+        if args[self.dest_msg_exact]:
+            _array = _to_str_arr(args[self.dest_msg_exact])
+            if comm_tools.is_empty(_array):
+                raise ValueError("msg filter -me empty value!!")
+            return MsgProcessor(include=_array, exact=True, **common)
+        return MsgProcessor(**common)
 
     def _define_args_level(self, args_parser):
         args_parser.add_argument(
-            "-l", "--" + self.dest_level, dest=self.dest_level, help="Log level V|D|I|W|E or 2-6", type=str, nargs=1
+            "-l", "--" + self.dest_level, dest=self.dest_level, help="日志级别 V|D|I|W|E 或 2-6", type=str, nargs=1
         )
 
-    def _parser_args_level(self, args):
+    def _build_level_filter(self, args):
         if args[self.dest_level]:
             _level = LogLevelHelper.level_code(comm_tools.get_str(_to_str_arr(args[self.dest_level])[0]))
             if _level == LogLevelHelper.UNKNOWN:
                 raise ValueError("level filter value error!!")
-            return LogLevelFilterFormat(target=_level)
-        return LogLevelFilterFormat()
+            return LevelFilter(threshold=_level)
+        return LevelFilter()
 
     def _define_args_cmd(self, args_parser):
         comm_cmd = args_parser.add_subparsers(
-            dest=self.dest_cmd, title="Commands", description="Shortcut commands", help="Command help"
+            dest=self.dest_cmd,
+            title="命令",
+            description="快捷命令",
+            help="命令说明",
+            parser_class=ChineseArgumentParser,
         )
         try:
             comm_cmd.required = False
         except AttributeError:
             pass
-        cap = comm_cmd.add_parser("cap-screen", aliases=["cs"], help="Capture screen")
+        cap = comm_cmd.add_parser("cap-screen", aliases=["cs"], help="截屏")
         self.cmd_name_define["cap-screen"] = ["cap-screen", "cs"]
-        cap.add_argument("-path", type=str, help="Save directory")
+        cap.add_argument("-path", type=str, help="保存目录")
 
-        record = comm_cmd.add_parser("record-video", aliases=["rv"], help="Record screen video")
+        record = comm_cmd.add_parser("record-video", aliases=["rv"], help="录屏")
         self.cmd_name_define["record-video"] = ["record-video", "rv"]
-        record.add_argument("-path", type=str, help="Save directory")
+        record.add_argument("-path", type=str, help="保存目录")
 
-        dump = comm_cmd.add_parser("dump-log", aliases=["dump"], help="Dump crash logs")
+        dump = comm_cmd.add_parser("dump-log", aliases=["dump"], help="导出崩溃日志")
         self.cmd_name_define["dump-log"] = ["dump-log", "dump"]
-        dump.add_argument("-type", type=int, default=0, help="0:app 1:native")
-        dump.add_argument("-maxsize", type=int, default=10, help="Max entries")
-        dump.add_argument("-path", type=str, help="Save directory")
+        dump.add_argument("-type", type=int, default=0, help="0:应用崩溃 1:Native 崩溃")
+        dump.add_argument("-maxsize", type=int, default=10, help="最大条数")
+        dump.add_argument("-path", type=str, help="保存目录")
 
-        install = comm_cmd.add_parser("install", aliases=["i"], help="Install apk/hap")
+        install = comm_cmd.add_parser("install", aliases=["i"], help="安装 apk/hap")
         self.cmd_name_define["install"] = ["install", "i"]
-        install.add_argument("-path", type=str, required=True, help="Local package path")
+        install.add_argument("-path", type=str, required=True, help="本地安装包路径")
 
     def build_parser(self):
         desc = "AKLog-{0} (Android & HarmonyOS developer Swiss Army Knife for Log)".format(self.AK_LOG_VERSION)
-        args_parser = argparse.ArgumentParser(description=desc)
-        args_parser.add_argument("-v", "--" + self.dest_version, action="version", version=self.AK_LOG_VERSION)
+        args_parser = ChineseArgumentParser(description=desc)
+        args_parser.add_argument(
+            "-v",
+            "--" + self.dest_version,
+            action="version",
+            version=self.AK_LOG_VERSION,
+            help="显示版本号并退出",
+        )
         args_parser.add_argument(
             "-d",
             "--" + self.dest_device,
             dest=self.dest_device,
             type=str,
-            help="Device serial (adb) or target (hdc); skip interactive selection",
+            help="设备序列号（adb）或 target（hdc）；跳过交互式选择",
         )
         self._define_args_package(args_parser)
         self._define_args_tag(args_parser)
@@ -249,12 +326,16 @@ class AkLogCli:
         return args_dict
 
     def build_log_printer(self, args):
-        log_printer = LogPrintCtr()
-        log_printer.package = self._parser_args_package(args)
-        log_printer.tag = self._parser_args_tag(args)
-        log_printer.msg = self._parser_args_msg(args)
-        log_printer.level = self._parser_args_level(args)
-        return log_printer
+        return LogPrintCtr(
+            filters=FilterChain(
+                [
+                    self._build_package_filter(args),
+                    self._build_level_filter(args),
+                    self._build_tag_filter(args),
+                ]
+            ),
+            msg_processor=self._build_msg_processor(args),
+        )
 
     def run_command(self, platform, args):
         cmd = args[self.dest_cmd]

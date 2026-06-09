@@ -86,7 +86,7 @@ module = [
     "aklog.log.info",
     "aklog.log.printer",
     "aklog.log.parser",
-    "aklog.log.filters",
+    "aklog.log.filter",
     "aklog.cli.args",
     "aklog.device.adb",
     "aklog.device.hdc",

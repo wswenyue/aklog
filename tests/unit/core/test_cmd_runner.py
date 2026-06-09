@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import subprocess
 from unittest.mock import MagicMock, patch
 
@@ -24,15 +25,23 @@ class TestCmdRunner:
 
     def test_iter_lines(self):
         proc = MagicMock()
-        proc.stdout.readline.side_effect = ["line1\n", "line2\n", ""]
+        proc.stdout.readline.side_effect = [b"line1\n", b"line2\n", b""]
         proc.wait.return_value = 0
         with patch("aklog.core.cmd_runner.popen", return_value=proc):
             lines = list(cmd_runner.iter_lines(["fake"]))
         assert lines == ["line1\n", "line2\n"]
 
+    def test_iter_lines_decodes_invalid_utf8(self):
+        proc = MagicMock()
+        proc.stdout.readline.side_effect = [b"ok \x8f line\n", b""]
+        proc.wait.return_value = 0
+        with patch("aklog.core.cmd_runner.popen", return_value=proc):
+            lines = list(cmd_runner.iter_lines(["fake"]))
+        assert lines == ["ok \ufffd line\n"]
+
     def test_iter_lines_closes_stdout(self):
         proc = MagicMock()
-        proc.stdout.readline.side_effect = [""]
+        proc.stdout.readline.side_effect = [b""]
         proc.wait.return_value = 0
         with patch("aklog.core.cmd_runner.popen", return_value=proc):
             list(cmd_runner.iter_lines(["fake"]))
@@ -49,9 +58,18 @@ class TestCmdRunner:
         with patch("aklog.core.cmd_runner.subprocess.Popen", return_value=proc):
             assert cmd_runner.popen(["echo"]) is proc
 
+    def test_read_stdout_line_prefers_buffer(self):
+        buffer = MagicMock()
+        buffer.readline.side_effect = [b"line\n"]
+        stdout = MagicMock(spec=io.TextIOBase)
+        stdout.buffer = buffer
+        read_line = cmd_runner.read_stdout_line(stdout)
+        assert read_line() == b"line\n"
+        buffer.readline.assert_called_once()
+
     def test_iter_lines_non_zero_exit(self):
         proc = MagicMock()
-        proc.stdout.readline.side_effect = [""]
+        proc.stdout.readline.side_effect = [b""]
         proc.wait.return_value = 1
         with patch("aklog.core.cmd_runner.popen", return_value=proc):
             with pytest.raises(subprocess.CalledProcessError):

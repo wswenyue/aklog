@@ -5,8 +5,10 @@
 @date:     2022/11/10
 """
 
+from typing import Optional
+
 from aklog.core.color_print import Colors, ColorStr, ColorStrArr, SimpleColorStr
-from aklog.log.filters import LogLevelFilterFormat, LogMsgFilterFormat, LogPackageFilterFormat, LogTagFilterFormat
+from aklog.log.filter import FilterChain, MsgProcessor
 from aklog.log.info import LogInfo, LogLevelHelper
 
 
@@ -15,62 +17,35 @@ class LogPrintCtr:
     控制日志的打印输出
     """
 
-    _package: LogPackageFilterFormat = None
-    _tag: LogTagFilterFormat = None
-    _msg: LogMsgFilterFormat = None
-    _level: LogLevelFilterFormat = None
+    def __init__(
+        self,
+        filters: FilterChain,
+        msg_processor: Optional[MsgProcessor] = None,
+    ):
+        self._filters = filters
+        self._msg_processor = msg_processor or MsgProcessor()
 
     @property
-    def package(self) -> LogPackageFilterFormat:
-        return self._package
-
-    @package.setter
-    def package(self, _package: LogPackageFilterFormat):
-        self._package = _package
+    def filters(self) -> FilterChain:
+        return self._filters
 
     @property
-    def tag(self) -> LogTagFilterFormat:
-        return self._tag
-
-    @tag.setter
-    def tag(self, _tag: LogTagFilterFormat):
-        self._tag = _tag
-
-    @property
-    def msg(self) -> LogMsgFilterFormat:
-        return self._msg
-
-    @msg.setter
-    def msg(self, _msg: LogMsgFilterFormat):
-        self._msg = _msg
-
-    @property
-    def level(self) -> LogLevelFilterFormat:
-        return self._level
-
-    @level.setter
-    def level(self, _level: LogLevelFilterFormat):
-        self._level = _level
+    def msg_processor(self) -> MsgProcessor:
+        return self._msg_processor
 
     def print(self, log: LogInfo):
         if log is None:
             return
-        p_package = self.package.format_content(log.get_process_name())
-        if not p_package:
+        if not self._filters.accept(log):
             return
-        p_level = self.level.format_content(log.get_level_name())
-        if not p_level:
-            return
-        p_tag = self.tag.format_content(log.tag)
-        if not p_tag:
-            return
-        p_msg = self.msg.format_content(log.get_msg_content())
+        p_msg = self._msg_processor.process(log.get_msg_content())
         if not p_msg:
             return
+        p_level = log.get_level_name()
+        p_tag = log.tag
         p_tid = log.get_show_tid()
         p_time = log.time
         p_name = log.get_show_name()
-        # msg = "{0}#{1}#{2}#{3}#{4}#{5}".format(p_time, p_name, p_tid, p_level, p_tag, p_msg)
         level = log.get_level()
         if level == LogLevelHelper.DEBUG:
             base_color = Colors.Green

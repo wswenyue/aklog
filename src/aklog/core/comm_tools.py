@@ -6,10 +6,11 @@ import fnmatch
 import os
 import platform
 import shutil
-import subprocess
 import sys
 import threading
 from typing import Iterable, List, Optional, Tuple
+
+TEXT_ENCODING = "utf-8"
 
 
 def is_empty(obj):
@@ -37,14 +38,19 @@ def is_not_empty(obj):
     return not is_empty(obj)
 
 
+def decode_bytes(data) -> str:
+    """Decode subprocess/file bytes at the str boundary."""
+    if isinstance(data, memoryview):
+        data = data.tobytes()
+    return bytes(data).decode(TEXT_ENCODING, errors="replace")
+
+
 def get_str(obj) -> str:
-    if type(obj) is str:
+    if isinstance(obj, str):
         return obj
-    elif type(obj) is bytes:
-        return bytes.decode(obj, encoding="utf-8", errors="ignore")
-        # return obj.decode("utf-8")
-    else:
-        return str(obj)
+    if isinstance(obj, (bytes, bytearray, memoryview)):
+        return decode_bytes(obj)
+    return str(obj)
 
 
 def to_str(obj) -> str:
@@ -60,23 +66,6 @@ def to_int(obj) -> int:
 
 def get_iterable(obj) -> Iterable:
     return iter(obj)
-
-
-def cmd_run_iter(cmd):
-    _cmd = str(cmd).split()
-    popen = subprocess.Popen(_cmd, stdout=subprocess.PIPE, universal_newlines=True)
-    for stdout_line in iter(popen.stdout.readline, ""):
-        yield get_str(stdout_line)
-    popen.stdout.close()
-    return_code = popen.wait()
-    if return_code:
-        raise subprocess.CalledProcessError(return_code, _cmd)
-
-
-def cmd_run(cmd):
-    _cmd = str(cmd).split()
-    output = subprocess.check_output(_cmd)
-    return get_str(output)
 
 
 def new_thread(f, name: str = None, args: Tuple = ()):
@@ -193,7 +182,7 @@ def match_str(a: str, b: str, is_exact: bool = True, is_ignore_case: bool = Fals
 
 
 def read_file_line_iter(file_path):
-    with open(file_path) as fp:
+    with open(file_path, encoding=TEXT_ENCODING, errors="replace") as fp:
         if not fp:
             return None
         for line in fp:
@@ -201,7 +190,7 @@ def read_file_line_iter(file_path):
 
 
 def read_file_lines(file_path):
-    with open(file_path) as fp:
+    with open(file_path, encoding=TEXT_ENCODING, errors="replace") as fp:
         if fp:
             return fp.readlines()
         return None
@@ -219,14 +208,14 @@ def write_to_file_iterable(obj, file_path):
     create_dir_not_exists(file_path)
     if not isinstance(obj, Iterable):
         return
-    with open(file_path, "w") as f:
+    with open(file_path, "w", encoding=TEXT_ENCODING) as f:
         if f:
             for line in obj:
                 f.write(line + "\n")
 
 
 def __write_to_file(name, msg, mode=None):
-    with open(name, mode) as f:
+    with open(name, mode, encoding=TEXT_ENCODING) as f:
         f.write(msg)
 
 
@@ -260,7 +249,7 @@ def create_file_not_exists(path):
         return
     dir_path = os.path.dirname(path)
     create_dir_not_exists(dir_path)
-    open(path, "w").close()
+    open(path, "w", encoding=TEXT_ENCODING).close()
 
 
 def is_file_exists(path):

@@ -146,7 +146,7 @@ class TestAdbHelper:
     def test_cmd_run_iter_yields_lines(self, tmp_path, monkeypatch):
         helper = self._make_helper(tmp_path, monkeypatch)
         proc = MagicMock()
-        proc.stdout.readline.side_effect = ["line\n", ""]
+        proc.stdout.readline.side_effect = [b"line\n", b""]
         proc.wait.return_value = 0
         with (
             patch.object(helper, "check_connect"),

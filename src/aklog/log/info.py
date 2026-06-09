@@ -80,7 +80,7 @@ class LogInfo:
             return
         if not self._msg:
             self._msg = []
-        self._msg.append(comm_tools.get_str(_content).strip())
+        self._msg.append(_content.strip())
 
     def get_msg_content(self):
         if not self._msg:

@@ -3,7 +3,7 @@
 from __future__ import absolute_import, print_function
 
 from aklog.app.info import AppInfoHelper
-from aklog.core import color_print
+from aklog.core import cmd_runner, color_print
 from aklog.core.comm_tools import get_str
 from aklog.device.manager import resolve_device
 
@@ -16,17 +16,18 @@ def run_log(platform, log_printer, level_arg=None):
         level = get_str(level_arg[0]) if isinstance(level_arg, list) else get_str(level_arg)
     pro = platform.start_log_stream(level=level)
     parser = platform.create_log_parser(log_printer)
+    read_line = cmd_runner.read_stdout_line(pro.stdout)
     err_code = pro.poll()
     _line = None
     while err_code is None:
         try:
-            _line = pro.stdout.readline()
+            _line = read_line()
             if _line:
                 parser.parser(get_str(_line).strip())
         except Exception as e:
             color_print.red("===========parser error===============\n{0}".format(e))
             if _line:
-                print("==>{0}<==".format(_line))
+                print("==>{0}<==".format(get_str(_line).strip()))
         err_code = pro.poll()
     if parser.log and log_printer:
         log_printer.print(parser.log)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from aklog.cli.args import AkLogCli
-from aklog.log.filters import PackageFilterType
+from aklog.log.filter import PackageMode
 
 
 @pytest.fixture
@@ -22,50 +22,97 @@ class TestAkLogCliParse:
 
     def test_package_all_flag(self, cli):
         args = cli.parse(["-pa"])
-        printer = cli.build_log_printer(args)
-        assert printer.package.type == PackageFilterType.All
+        package_filter = cli._build_package_filter(args)
+        assert package_filter.mode == PackageMode.ALL
 
     def test_package_target(self, cli):
         args = cli.parse(["-p", "com.example.app"])
-        printer = cli.build_log_printer(args)
-        assert printer.package.type == PackageFilterType.TARGET
-        assert "com.example.app" in printer.package.target_package
+        package_filter = cli._build_package_filter(args)
+        assert package_filter.mode == PackageMode.TARGET
+        assert "com.example.app" in package_filter.targets
 
     def test_package_exclude(self, cli):
         args = cli.parse(["-pn", "system"])
-        printer = cli.build_log_printer(args)
-        assert printer.package.type == PackageFilterType.EXCLUDE
+        package_filter = cli._build_package_filter(args)
+        assert package_filter.mode == PackageMode.EXCLUDE
 
     def test_tag_exact(self, cli):
         args = cli.parse(["-te", "MyTag"])
-        printer = cli.build_log_printer(args)
-        assert printer.tag.is_exact is True
-        assert printer.tag.target == ["MyTag"]
+        tag_filter = cli._build_tag_filter(args)
+        assert tag_filter.exact is True
+        assert tag_filter.include == ["MyTag"]
 
-    def test_tag_not_fuzzy(self, cli):
-        args = cli.parse(["-tnf", "Noise"])
-        printer = cli.build_log_printer(args)
-        assert printer.tag.is_tag_not_fuzzy is True
-        assert printer.tag.tag_not == ["Noise"]
+    def test_tag_not(self, cli):
+        args = cli.parse(["-tn", "wlog"])
+        tag_filter = cli._build_tag_filter(args)
+        assert tag_filter.exclude_fuzzy == ["wlog"]
+        assert tag_filter.accept_tag("com.wuba.bangjob.hap/wlog-c") is False
+        assert tag_filter.accept_tag("other-tag") is True
+
+    def test_tag_not_exact(self, cli):
+        args = cli.parse(["-ten", "MyTag"])
+        tag_filter = cli._build_tag_filter(args)
+        assert tag_filter.exclude_exact == ["MyTag"]
+        assert tag_filter.accept_tag("MyTag") is False
+        assert tag_filter.accept_tag("MyTagExtra") is True
+
+    def test_tag_not_fuzzy_and_exact_together(self, cli):
+        args = cli.parse(["-tn", "Noise", "-ten", "ExactTag"])
+        tag_filter = cli._build_tag_filter(args)
+        assert tag_filter.exclude_fuzzy == ["Noise"]
+        assert tag_filter.exclude_exact == ["ExactTag"]
+        assert tag_filter.accept_tag("NoiseTag") is False
+        assert tag_filter.accept_tag("ExactTag") is False
+        assert tag_filter.accept_tag("CleanTag") is True
 
     def test_msg_keyword(self, cli):
         args = cli.parse(["-m", "error"])
-        printer = cli.build_log_printer(args)
-        assert printer.msg.target == ["error"]
+        msg_processor = cli._build_msg_processor(args)
+        assert msg_processor.include == ["error"]
+        assert msg_processor.exact is False
+        assert msg_processor.process("got ERROR here") == "got ERROR here"
+
+    def test_msg_exact(self, cli):
+        args = cli.parse(["-me", "error"])
+        msg_processor = cli._build_msg_processor(args)
+        assert msg_processor.include == ["error"]
+        assert msg_processor.exact is True
+        assert msg_processor.process("error") == "error"
+        assert msg_processor.process("got error here") is None
+
+    def test_msg_not_fuzzy(self, cli):
+        args = cli.parse(["-mn", "secret"])
+        msg_processor = cli._build_msg_processor(args)
+        assert msg_processor.exclude_fuzzy == ["secret"]
+        assert msg_processor.process("contains SECRET") is None
+
+    def test_msg_not_exact(self, cli):
+        args = cli.parse(["-men", "error"])
+        msg_processor = cli._build_msg_processor(args)
+        assert msg_processor.exclude_exact == ["error"]
+        assert msg_processor.process("error") is None
+        assert msg_processor.process("got error here") == "got error here"
+
+    def test_msg_not_fuzzy_and_exact_together(self, cli):
+        args = cli.parse(["-mn", "noise", "-men", "ExactMsg"])
+        msg_processor = cli._build_msg_processor(args)
+        assert msg_processor.process("Noise here") is None
+        assert msg_processor.process("ExactMsg") is None
+        assert msg_processor.process("clean") == "clean"
 
     def test_msg_json(self, cli):
         args = cli.parse(["-mjson", "userId"])
-        out = cli.build_log_printer(args).msg.format_content('{"userId":"1"}')
+        out = cli._build_msg_processor(args).process('{"userId":"1"}')
         assert out is not None
 
     def test_level_filter(self, cli):
         args = cli.parse(["-l", "E"])
-        assert cli.build_log_printer(args).level.filter("E") is True
+        assert cli._build_level_filter(args).accept_level("E") is True
 
     def test_invalid_level_raises(self, cli):
         args = cli.parse(["-l", "?"])
         with pytest.raises(ValueError, match="level filter"):
-            cli.build_log_printer(args)
+            cli._build_level_filter(args)
 
     def test_device_option(self, cli):
         args = cli.parse(["-d", "emulator-5554"])
@@ -75,7 +122,37 @@ class TestAkLogCliParse:
         args = cli.parse([])
         args[cli.dest_msg] = [""]
         with pytest.raises(ValueError, match="msg filter"):
-            cli._parser_args_msg(args)
+            cli._build_msg_processor(args)
+
+    def test_empty_msg_exact_filter_raises(self, cli):
+        args = cli.parse([])
+        args[cli.dest_msg_exact] = [""]
+        with pytest.raises(ValueError, match="msg filter"):
+            cli._build_msg_processor(args)
+
+
+class TestAkLogCliBuildLogPrinter:
+    def test_default_builds_top_package_filter(self, cli):
+        printer = cli.build_log_printer(cli.parse([]))
+        package_filter = printer.filters.filters[0]
+        assert package_filter.mode == PackageMode.TOP
+
+    def test_build_log_printer_wires_full_filter_chain(self, cli):
+        args = cli.parse(["-pa", "-te", "MyTag", "-m", "error", "-l", "W"])
+        printer = cli.build_log_printer(args)
+        package_filter, level_filter, tag_filter = printer.filters.filters
+        assert package_filter.mode == PackageMode.ALL
+        assert tag_filter.exact is True
+        assert tag_filter.include == ["MyTag"]
+        assert printer.msg_processor.include == ["error"]
+        assert level_filter.accept_level("W") is True
+        assert level_filter.accept_level("I") is False
+
+    def test_msg_not_with_json(self, cli):
+        args = cli.parse(["-mn", "secret", "-mjson", "userId"])
+        processor = cli._build_msg_processor(args)
+        assert processor.process('{"userId":"1"}') is not None
+        assert processor.process('secret {"userId":"1"}') is None
 
 
 class TestAkLogCliCommands:

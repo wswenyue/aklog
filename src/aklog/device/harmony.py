@@ -77,7 +77,11 @@ class HarmonyPlatform(DevicePlatform):
         else:
             cmd = "shell hilog"
         return self._helper.popen(
-            cmd, buf_size=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+            cmd,
+            buf_size=1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=False,
         )
 
     def create_log_parser(self, log_printer):
@@ -193,7 +197,7 @@ class HarmonyPlatform(DevicePlatform):
             local_path = os.path.join(local_dir, name)
             try:
                 self.pull_file(remote, local_path)
-                with open(local_path, "r") as fp:
+                with open(local_path, encoding=comm_tools.TEXT_ENCODING, errors="replace") as fp:
                     buf_lines.append(fp.read())
             except Exception as e:
                 print("pull {0} failed: {1}".format(name, e))

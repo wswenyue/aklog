@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function
 
+import io
 import subprocess
 
 from aklog.core import comm_tools
@@ -49,11 +50,27 @@ def popen(argv, **kwargs):
     return subprocess.Popen(argv, **popen_kw)
 
 
+def read_stdout_line(stdout):
+    """Return a readline callable that always reads raw bytes."""
+    if isinstance(stdout, io.TextIOBase):
+        return stdout.buffer.readline
+    return stdout.readline
+
+
+def iter_stdout_lines(stdout):
+    read_line = read_stdout_line(stdout)
+    while True:
+        raw = read_line()
+        if not raw:
+            break
+        yield raw
+
+
 def iter_lines(argv):
-    proc = popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    proc = popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        for line in iter(proc.stdout.readline, ""):
-            yield comm_tools.get_str(line)
+        for raw in iter_stdout_lines(proc.stdout):
+            yield comm_tools.get_str(raw)
     finally:
         if proc.stdout:
             proc.stdout.close()

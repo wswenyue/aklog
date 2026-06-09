@@ -62,7 +62,11 @@ class AndroidPlatform(DevicePlatform):
             if lv != "UnKnown":
                 cmd = "logcat -v long *:{0}".format(lv)
         return self._helper.popen(
-            cmd, buf_size=1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
+            cmd,
+            buf_size=1,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=False,
         )
 
     def create_log_parser(self, log_printer):
@@ -76,8 +80,8 @@ class AndroidPlatform(DevicePlatform):
                 token = parts[-3]
                 if "/" in token:
                     return token.split("/")[0]
-        except Exception as e:
-            comm_tools.get_str(e)
+        except Exception:
+            pass
         try:
             for line in self._helper.cmd_run_iter('shell sh -c "dumpsys window windows | grep mFocusedApp"'):
                 line = line.strip()

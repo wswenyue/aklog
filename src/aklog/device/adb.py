@@ -134,10 +134,13 @@ class AdbHelper:
 
     def cmd_run_iter(self, cmd):
         self.check_connect()
-        popen = self.popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
-        for stdout_line in iter(popen.stdout.readline, ""):
-            yield comm_tools.get_str(stdout_line)
-        popen.stdout.close()
+        popen = self.popen(cmd, stdout=subprocess.PIPE)
+        try:
+            for raw in cmd_runner.iter_stdout_lines(popen.stdout):
+                yield comm_tools.get_str(raw)
+        finally:
+            if popen.stdout:
+                popen.stdout.close()
         return_code = popen.wait()
         if return_code:
             raise subprocess.CalledProcessError(return_code, cmd)

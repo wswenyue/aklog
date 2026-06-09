@@ -24,12 +24,12 @@ class LogMsgParser:
     @staticmethod
     def _build_log_info(group) -> LogInfo:
         return LogInfo(
-            _date=comm_tools.get_str(group[0]),
-            _time=comm_tools.get_str(group[1]),
-            _pid=comm_tools.get_str(group[2]),
-            _tid=comm_tools.get_str(group[3]),
-            _priority=comm_tools.get_str(group[4]),
-            _tag=comm_tools.get_str(group[5]),
+            _date=group[0],
+            _time=group[1],
+            _pid=group[2],
+            _tid=group[3],
+            _priority=group[4],
+            _tag=group[5],
         )
 
     def parser(self, msg):
@@ -67,16 +67,16 @@ class HilogMsgParser:
 
     @staticmethod
     def _build_log_info(group):
-        tag = comm_tools.get_str(group[5])
+        tag = group[5]
         if "/" in tag:
             tag = tag.split("/", 1)[1]
-        msg = comm_tools.get_str(group[6])
+        msg = group[6]
         info = LogInfo(
-            _date=comm_tools.get_str(group[0]),
-            _time=comm_tools.get_str(group[1]),
-            _pid=comm_tools.get_str(group[2]),
-            _tid=comm_tools.get_str(group[3]),
-            _priority=comm_tools.get_str(group[4]),
+            _date=group[0],
+            _time=group[1],
+            _pid=group[2],
+            _tid=group[3],
+            _priority=group[4],
             _tag=tag,
         )
         if comm_tools.is_not_empty(msg):

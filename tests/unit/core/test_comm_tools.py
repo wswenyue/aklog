@@ -26,6 +26,12 @@ class TestGetStr:
     def test_bytes_decoding(self):
         assert comm_tools.get_str(b"abc") == "abc"
 
+    def test_bytes_invalid_utf8(self):
+        assert comm_tools.get_str(b"ok \x8f \xbe log") == "ok \ufffd \ufffd log"
+
+    def test_bytearray_decoding(self):
+        assert comm_tools.decode_bytes(bytearray(b"abc")) == "abc"
+
     def test_other_types(self):
         assert comm_tools.get_str(123) == "123"
 

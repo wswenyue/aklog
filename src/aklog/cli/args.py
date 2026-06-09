@@ -6,6 +6,7 @@ import argparse
 
 from aklog.build_meta import GIT_TAG
 from aklog.core import comm_tools
+from aklog.core.config import load_config
 from aklog.log.filter import (
     FilterChain,
     LevelFilter,
@@ -17,6 +18,7 @@ from aklog.log.filter import (
 from aklog.log.format import JsonValueFormat
 from aklog.log.info import LogLevelHelper
 from aklog.log.printer import LogPrintCtr
+from aklog.log.theme import LogColorTheme
 from aklog.tools.dump_crash import DumpCrashLog
 from aklog.tools.record_video import RecordHelper
 from aklog.tools.screen_cap import ScreenCapTools
@@ -294,6 +296,22 @@ class AkLogCli:
         self.cmd_name_define["install"] = ["install", "i"]
         install.add_argument("-path", type=str, required=True, help="本地安装包路径")
 
+        config = comm_cmd.add_parser("config", help="配置管理")
+        self.cmd_name_define["config"] = ["config"]
+        config_sub = config.add_subparsers(
+            dest="config_action",
+            title="配置子命令",
+            help="配置子命令说明",
+            parser_class=ChineseArgumentParser,
+        )
+        try:
+            config_sub.required = True
+        except AttributeError:
+            pass
+        config_init = config_sub.add_parser("init", help="生成默认配置文件")
+        config_init.add_argument("--force", action="store_true", help="覆盖已有配置文件")
+        config_sub.add_parser("path", help="显示配置文件路径")
+
     def build_parser(self):
         desc = "AKLog-{0} (Android & HarmonyOS developer Swiss Army Knife for Log)".format(self.AK_LOG_VERSION)
         args_parser = ChineseArgumentParser(description=desc)
@@ -326,6 +344,7 @@ class AkLogCli:
         return args_dict
 
     def build_log_printer(self, args):
+        color_theme = LogColorTheme(load_config().colors)
         return LogPrintCtr(
             filters=FilterChain(
                 [
@@ -335,12 +354,18 @@ class AkLogCli:
                 ]
             ),
             msg_processor=self._build_msg_processor(args),
+            color_theme=color_theme,
         )
 
     def run_command(self, platform, args):
         cmd = args[self.dest_cmd]
         if comm_tools.is_empty(cmd):
             return False
+        if cmd in self.cmd_name_define["config"]:
+            from aklog.cli.config_cmd import run_config_command
+
+            run_config_command(args)
+            return True
         if cmd in self.cmd_name_define["cap-screen"]:
             _dir = comm_tools.get_str(args.get("path"))
             if _dir == "null":

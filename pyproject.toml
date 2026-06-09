@@ -11,6 +11,10 @@ version = "5.3.33"
 description = "Android & HarmonyOS developer Swiss Army Knife for Log"
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = [
+    "rich>=13.7",
+    "tomli>=2.0; python_version < '3.11'",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -82,7 +86,8 @@ no_implicit_optional = false
 [[tool.mypy.overrides]]
 module = [
     "aklog.core.comm_tools",
-    "aklog.core.color_print",
+    "aklog.core.config",
+    "aklog.core.console",
     "aklog.log.info",
     "aklog.log.printer",
     "aklog.log.parser",

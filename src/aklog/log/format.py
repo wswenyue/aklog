@@ -7,15 +7,14 @@
 
 import re
 from abc import ABCMeta, abstractmethod
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from aklog.core import comm_tools
-from aklog.core.color_print import ColorStr
 
 
 class IFormatContent(metaclass=ABCMeta):
     @abstractmethod
-    def format_content(self, _input: str) -> Optional[Union[str, ColorStr]]:
+    def format_content(self, _input: str) -> Optional[str]:
         pass
 
 
@@ -36,7 +35,7 @@ class JsonValueFormat(IFormatContent):
             return str(ret[0]).strip()
         return str(ret)
 
-    def format_content(self, _input: str) -> Optional[Union[str, ColorStr]]:
+    def format_content(self, _input: str) -> Optional[str]:
         if comm_tools.is_empty(_input):
             return None
         has_key = False

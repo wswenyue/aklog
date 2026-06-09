@@ -189,3 +189,18 @@ class TestAkLogCliCommands:
 
         args = cli.parse([])
         assert cli.run_command(FakePlatform(), args) is False
+
+    def test_run_config_path(self, cli, capsys):
+        args = cli.parse(["config", "path"])
+        assert cli.run_command(object(), args) is True
+        captured = capsys.readouterr()
+        assert "config.toml" in captured.out
+
+    def test_run_config_init(self, cli, monkeypatch, tmp_path, capsys):
+        config_path = tmp_path / "config.toml"
+        monkeypatch.setattr("aklog.cli.config_cmd.config_path", lambda: str(config_path))
+        monkeypatch.setattr("aklog.cli.config_cmd.init_config_file", lambda force=False: (str(config_path), True))
+        args = cli.parse(["config", "init"])
+        assert cli.run_command(object(), args) is True
+        captured = capsys.readouterr()
+        assert str(config_path) in captured.out

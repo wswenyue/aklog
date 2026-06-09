@@ -7,6 +7,7 @@ Android & HarmonyOS developer's Swiss Army Knife for Log
 ### Requirements
 
 - **Python 3.9+**
+- **rich** (installed automatically via `pip install` / Homebrew `post_install`)
 
 Bundled tools on macOS (optional; SDK environment variables take precedence):
 
@@ -26,7 +27,7 @@ Environment variables (optional):
 brew tap wswenyue/aklog && brew install aklog
 ```
 
-Uses system `python3` when available; otherwise Homebrew installs [python](https://formulae.brew.sh/formula/python) as a dependency (no extra pip packages).
+Uses system `python3` when available; otherwise Homebrew installs [python](https://formulae.brew.sh/formula/python) as a dependency. Runtime Python packages (`rich`, `tomli` on Python &lt; 3.11) are installed automatically during `brew install`.
 
 ### Update
 
@@ -43,9 +44,22 @@ aklog cap-screen                   # screenshot
 aklog record-video                 # screen record (Ctrl+C to stop)
 aklog dump-log                     # dump crash logs
 aklog install -path ./app.hap      # install hap/apk
+aklog config init                  # create user color config
+aklog config path                  # show config file path
 ```
 
 When multiple USB devices are connected (adb and/or hdc), aklog prompts for selection unless `-d` is provided.
+
+### Configuration
+
+User settings are stored at `~/.config/aklog/config.toml` (or `%APPDATA%\aklog\config.toml` on Windows).
+
+```shell
+aklog config init      # generate default color theme
+aklog config path      # print config location
+```
+
+Edit `[colors]` to customize log level colors. Rich color names (`green`, `bright_blue`, `#ff6600`, etc.) are supported. Invalid values fall back to built-in defaults.
 
 ### Platforms
 
@@ -70,7 +84,7 @@ lib/darwin/{arm64,x86_64}/  # bundled adb / hdc for Homebrew (see lib/README.md)
 src/aklog/
   build_meta.py         # version constants (generated at release)
   cli/                  # argparse & main dispatch
-  core/                 # comm_tools, cmd_runner, color_print, paths
+  core/                 # comm_tools, cmd_runner, config, console, paths
   device/               # platform abstraction (android / harmony), adb, hdc
   log/                  # parser, filters, printer
   app/                  # foreground app / process info

@@ -41,7 +41,7 @@ class TestRunLog:
         parser.log = None
         platform.create_log_parser.return_value = parser
 
-        with patch("aklog.cli.commands.AppInfoHelper.start"), patch("aklog.cli.commands.color_print.red") as red_mock:
+        with patch("aklog.cli.commands.AppInfoHelper.start"), patch("aklog.cli.commands.print_error") as red_mock:
             commands.run_log(platform, log_printer)
 
         red_mock.assert_not_called()
@@ -61,7 +61,7 @@ class TestRunLog:
         parser.log = None
         platform.create_log_parser.return_value = parser
 
-        with patch("aklog.cli.commands.AppInfoHelper.start"), patch("aklog.cli.commands.color_print.red") as red_mock:
+        with patch("aklog.cli.commands.AppInfoHelper.start"), patch("aklog.cli.commands.print_error") as red_mock:
             commands.run_log(platform, log_printer)
 
         red_mock.assert_not_called()

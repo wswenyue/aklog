@@ -3,8 +3,9 @@
 from __future__ import absolute_import, print_function
 
 from aklog.app.info import AppInfoHelper
-from aklog.core import cmd_runner, color_print
+from aklog.core import cmd_runner
 from aklog.core.comm_tools import get_str
+from aklog.core.console import print_error
 from aklog.device.manager import resolve_device
 
 
@@ -25,7 +26,7 @@ def run_log(platform, log_printer, level_arg=None):
             if _line:
                 parser.parser(get_str(_line).strip())
         except Exception as e:
-            color_print.red("===========parser error===============\n{0}".format(e))
+            print_error("===========parser error===============\n{0}".format(e))
             if _line:
                 print("==>{0}<==".format(get_str(_line).strip()))
         err_code = pro.poll()

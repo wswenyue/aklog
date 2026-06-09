@@ -27,6 +27,7 @@ class Aklog < Formula
     inreplace libexec/"aklog", /^AKLOG_PYTHON=__AKLOG_PYTHON__$/,
                 "AKLOG_PYTHON=#{selected_python}"
     bin.install_symlink libexec/"aklog"
+    system selected_python, "-m", "pip", "install", "rich", "tomli"
   end
 
   def post_install

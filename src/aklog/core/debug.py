@@ -4,17 +4,17 @@
 import sys
 import traceback
 
-from aklog.core import color_print
+from aklog.core.console import print_error, print_green
 
 TAG = "AKLog::"
 
 
 def log(msg):
-    color_print.green(TAG + str(msg))
+    print_green(TAG + str(msg))
 
 
 def log_err(msg):
-    color_print.red(">>>>>>>>>>>>>>>>>>>>Error Begin>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    color_print.red(TAG + str(msg))
+    print_error(">>>>>>>>>>>>>>>>>>>>Error Begin>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print_error(TAG + str(msg))
     traceback.print_stack(file=sys.stdout)
-    color_print.red("<<<<<<<<<<<<<<<<<<<<Error End<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    print_error("<<<<<<<<<<<<<<<<<<<<Error End<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")

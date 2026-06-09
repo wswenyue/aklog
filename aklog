@@ -31,9 +31,20 @@ resolve_ak_dir() {
 	return 1
 }
 
+check_rich() {
+	local py="$1"
+	if ! "$py" -c "import rich" 2>/dev/null; then
+		echo >&2 "aklog requires the 'rich' package. Install with:"
+		echo >&2 "  $py -m pip install rich"
+		return 1
+	fi
+	return 0
+}
+
 run_aklog() {
 	local py="$1"
 	shift
+	check_rich "$py" || exit 1
 	PYTHONPATH="${AK_DIR}/src" exec "$py" -m aklog "$@"
 }
 

@@ -7,7 +7,8 @@
 
 import re
 
-from aklog.core import color_print, comm_tools
+from aklog.core import comm_tools
+from aklog.core.console import print_dim
 from aklog.log.info import LogInfo
 from aklog.log.printer import LogPrintCtr
 
@@ -45,7 +46,7 @@ class LogMsgParser:
             if self.log:
                 self.log.append_msg_content(msg)
             else:
-                color_print.light_gray(">>>>" + str(msg).strip())
+                print_dim(">>>>" + str(msg).strip())
 
     def parser_head(self, _msg):
         match = self.PATTERN_HEAD.search(_msg)
@@ -99,7 +100,7 @@ class HilogMsgParser:
             if self.log:
                 self.log.append_msg_content(msg)
             else:
-                color_print.light_gray(">>>>" + str(msg).strip())
+                print_dim(">>>>" + str(msg).strip())
 
     def parser_head(self, _msg):
         match = self.PATTERN_HEAD.search(_msg)

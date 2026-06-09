@@ -28,8 +28,34 @@ class Aklog < Formula
                 "AKLOG_PYTHON=#{selected_python}"
     bin.install_symlink libexec/"aklog"
     system selected_python, "-m", "pip", "install", "rich", "tomli", "argcomplete"
-    bash_completion.install "contrib/bash/aklog"
-    zsh_completion.install "contrib/zsh/_aklog"
+    install_bash_completion
+    install_zsh_completion
+  end
+
+  def install_bash_completion
+    if (libexec/"contrib/bash/aklog").exist?
+      bash_completion.install libexec/"contrib/bash/aklog"
+    else
+      (bash_completion/"aklog").write <<~EOS
+        # bash completion for aklog
+        if type register-python-argcomplete &>/dev/null; then
+          eval "$(register-python-argcomplete aklog)"
+        fi
+      EOS
+    end
+  end
+
+  def install_zsh_completion
+    if (libexec/"contrib/zsh/_aklog").exist?
+      zsh_completion.install libexec/"contrib/zsh/_aklog"
+    else
+      (zsh_completion/"_aklog").write <<~EOS
+        #compdef aklog
+        if (( $+commands[register-python-argcomplete] )); then
+          eval "$(register-python-argcomplete aklog)"
+        fi
+      EOS
+    end
   end
 
   def post_install

@@ -58,8 +58,9 @@ class LogMsgParser:
 
 class HilogMsgParser:
     # 04-19 17:02:14.735  5394  5394 I A03200/testTag: message
+    # tag: domainID/tag, bundleName/tag, or domainID/bundleName/tag
     PATTERN_HEAD = re.compile(
-        r"^(\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2}\.\d+)\s+(\d+)\s+(\d+)\s+([DIWEFV])\s+([^:]+):\s*(.*)$"
+        r"^(\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2}\.\d+)\s+(\d+)\s+(\d+)\s+([DIWEFV])\s+(?:[^/]+/)*([^/]+):\s*(.*)$"
     )
     log = None
 
@@ -68,9 +69,6 @@ class HilogMsgParser:
 
     @staticmethod
     def _build_log_info(group):
-        tag = group[5]
-        if "/" in tag:
-            tag = tag.split("/", 1)[1]
         msg = group[6]
         info = LogInfo(
             _date=group[0],
@@ -78,7 +76,7 @@ class HilogMsgParser:
             _pid=group[2],
             _tid=group[3],
             _priority=group[4],
-            _tag=tag,
+            _tag=group[5],
         )
         if comm_tools.is_not_empty(msg):
             info.append_msg_content(msg)

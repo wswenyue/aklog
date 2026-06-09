@@ -37,7 +37,8 @@ class LogColorTheme:
         return Style.parse(f"{self._config.level_style} {colors.tag}")
 
     def tag_style(self, level: int) -> Style:
-        return Style.parse(self._level_colors(level).tag)
+        colors = self._level_colors(level)
+        return Style.parse(f"{self._config.tag_style} {colors.tag}")
 
     def msg_style(self, level: int) -> Style:
         return Style.parse(self._level_colors(level).base)

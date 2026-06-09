@@ -9,7 +9,11 @@ class TestLogColorTheme:
     def test_default_styles_for_debug(self):
         theme = LogColorTheme()
         assert theme.msg_style(LogLevelHelper.DEBUG).color.name == "green"
-        assert theme.tag_style(LogLevelHelper.DEBUG).color.name == "bright_green"
+        tag_style = theme.tag_style(LogLevelHelper.DEBUG)
+        assert tag_style.color.name == "bright_green"
+        assert tag_style.bold is True
+        assert tag_style.underline is True
+        assert tag_style.reverse is True
         assert theme.level_style(LogLevelHelper.DEBUG).underline is True
 
     def test_custom_config_styles(self):

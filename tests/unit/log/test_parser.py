@@ -43,3 +43,13 @@ class TestHilogMsgParser:
         assert parser.log is not None
         parser.parser("continuation")
         assert "continuation" in parser.log.get_msg_content()
+
+    def test_parses_domain_bundle_tag_format(self):
+        printer = MagicMock()
+        parser = HilogMsgParser(printer)
+        parser.parser(
+            "06-09 15:49:56.491  56558  56558 I A03200/com.ganji.job/[wmda]: [session] get uuid"
+        )
+        printed = printer.print.call_args[0][0]
+        assert printed.tag == "[wmda]"
+        assert printed.get_msg_content() == "[session] get uuid"

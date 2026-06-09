@@ -25,6 +25,7 @@ class LevelColors:
 class ColorConfig:
     meta: str = "grey50"
     level_style: str = "underline"
+    tag_style: str = "bold underline reverse"
     verbose: LevelColors = field(default_factory=lambda: LevelColors("grey50", "grey62"))
     debug: LevelColors = field(default_factory=lambda: LevelColors("green", "bright_green"))
     info: LevelColors = field(default_factory=lambda: LevelColors("blue", "bright_blue"))
@@ -44,6 +45,7 @@ DEFAULT_CONFIG_TEMPLATE = """\
 [colors]
 meta = "grey50"
 level_style = "underline"
+tag_style = "bold underline reverse"
 
 [colors.verbose]
 base = "grey50"
@@ -109,6 +111,7 @@ def _parse_colors(data: Dict[str, Any]) -> ColorConfig:
     return ColorConfig(
         meta=str(colors_data.get("meta", default.meta)),
         level_style=str(colors_data.get("level_style", default.level_style)),
+        tag_style=str(colors_data.get("tag_style", default.tag_style)),
         verbose=_parse_level_colors(colors_data, "verbose", default.verbose),
         debug=_parse_level_colors(colors_data, "debug", default.debug),
         info=_parse_level_colors(colors_data, "info", default.info),
@@ -152,6 +155,7 @@ def _validate_color_config(config: ColorConfig) -> ColorConfig:
     validated = ColorConfig(
         meta=_safe_color(config.meta, default.meta, "colors.meta", warnings),
         level_style=config.level_style if _is_valid_rich_color(config.level_style) else default.level_style,
+        tag_style=config.tag_style if _is_valid_rich_color(config.tag_style) else default.tag_style,
         verbose=validate_level("verbose", config.verbose, default.verbose),
         debug=validate_level("debug", config.debug, default.debug),
         info=validate_level("info", config.info, default.info),
@@ -160,6 +164,8 @@ def _validate_color_config(config: ColorConfig) -> ColorConfig:
     )
     if config.level_style != validated.level_style:
         warnings.append(f"colors.level_style: invalid style '{config.level_style}', using '{default.level_style}'")
+    if config.tag_style != validated.tag_style:
+        warnings.append(f"colors.tag_style: invalid style '{config.tag_style}', using '{default.tag_style}'")
 
     for warning in warnings:
         _print_config_warning(warning)

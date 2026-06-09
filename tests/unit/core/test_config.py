@@ -7,7 +7,7 @@ class TestConfig:
     def test_default_color_config(self):
         colors = config_module.default_color_config()
         assert colors.meta == "grey50"
-        assert colors.debug.base == "green"
+        assert colors.debug.base == "dark_green"
         assert colors.error.tag == "bright_red"
 
     def test_load_config_missing_file(self, monkeypatch, tmp_path):

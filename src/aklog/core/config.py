@@ -24,14 +24,14 @@ class LevelColors:
 @dataclass
 class ColorConfig:
     meta: str = "grey50"
-    level_style: str = "underline"
+    level_style: str = "bold"
     tag_style: str = "bold underline"
     msg_style: str = "bold"
     verbose: LevelColors = field(default_factory=lambda: LevelColors("grey50", "grey62"))
-    debug: LevelColors = field(default_factory=lambda: LevelColors("green", "bright_green"))
-    info: LevelColors = field(default_factory=lambda: LevelColors("blue", "bright_blue"))
-    warn: LevelColors = field(default_factory=lambda: LevelColors("yellow", "bright_yellow"))
-    error: LevelColors = field(default_factory=lambda: LevelColors("red", "bright_red"))
+    debug: LevelColors = field(default_factory=lambda: LevelColors("dark_green", "bright_green"))
+    info: LevelColors = field(default_factory=lambda: LevelColors("steel_blue3", "bright_blue"))
+    warn: LevelColors = field(default_factory=lambda: LevelColors("dark_goldenrod", "bright_yellow"))
+    error: LevelColors = field(default_factory=lambda: LevelColors("dark_red", "bright_red"))
 
 
 @dataclass
@@ -45,7 +45,7 @@ DEFAULT_CONFIG_TEMPLATE = """\
 
 [colors]
 meta = "grey50"
-level_style = "underline"
+level_style = "bold"
 tag_style = "bold underline"
 msg_style = "bold"
 
@@ -54,19 +54,19 @@ base = "grey50"
 tag = "grey62"
 
 [colors.debug]
-base = "green"
+base = "dark_green"
 tag = "bright_green"
 
 [colors.info]
-base = "blue"
+base = "steel_blue3"
 tag = "bright_blue"
 
 [colors.warn]
-base = "yellow"
+base = "dark_goldenrod"
 tag = "bright_yellow"
 
 [colors.error]
-base = "red"
+base = "dark_red"
 tag = "bright_red"
 
 # Future (not used yet):

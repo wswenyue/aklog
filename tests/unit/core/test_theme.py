@@ -13,11 +13,14 @@ class TestLogColorTheme:
         assert msg_style.bold is True
         assert not msg_style.reverse
         tag_style = theme.tag_style(LogLevelHelper.DEBUG)
-        assert tag_style.color.name == "green"
+        assert tag_style.color.name == "dark_green"
         assert tag_style.bold is True
         assert tag_style.underline is True
         assert not tag_style.reverse
-        assert theme.level_style(LogLevelHelper.DEBUG).underline is True
+        level_style = theme.level_style(LogLevelHelper.DEBUG)
+        assert level_style.color.name == "bright_green"
+        assert level_style.bold is True
+        assert not level_style.underline
 
     def test_custom_config_styles(self):
         colors = ColorConfig(

@@ -25,7 +25,7 @@ class LevelColors:
 class ColorConfig:
     meta: str = "grey50"
     level_style: str = "underline"
-    tag_style: str = "bold underline reverse"
+    tag_style: str = "bold underline"
     verbose: LevelColors = field(default_factory=lambda: LevelColors("grey50", "grey62"))
     debug: LevelColors = field(default_factory=lambda: LevelColors("green", "bright_green"))
     info: LevelColors = field(default_factory=lambda: LevelColors("blue", "bright_blue"))
@@ -45,7 +45,7 @@ DEFAULT_CONFIG_TEMPLATE = """\
 [colors]
 meta = "grey50"
 level_style = "underline"
-tag_style = "bold underline reverse"
+tag_style = "bold underline"
 
 [colors.verbose]
 base = "grey50"

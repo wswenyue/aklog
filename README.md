@@ -1,4 +1,4 @@
-# aklog [![Release](https://github.com/wswenyue/aklog/actions/workflows/release.yml/badge.svg)](https://github.com/wswenyue/aklog/actions/workflows/release.yml)
+# aklog [![CI](https://github.com/wswenyue/aklog/actions/workflows/ci.yml/badge.svg)](https://github.com/wswenyue/aklog/actions/workflows/ci.yml)
 
 Android & HarmonyOS developer's Swiss Army Knife for Log
 

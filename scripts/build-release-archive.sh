@@ -38,6 +38,9 @@ for item in pyproject.toml README.md; do
     cp "${ROOT}/${item}" "${STAGING}/${item}"
   fi
 done
+if [ -d "${ROOT}/contrib" ]; then
+  rsync -a "${ROOT}/contrib/" "${STAGING}/contrib/"
+fi
 if [ -f "${ROOT}/lib/README.md" ]; then
   mkdir -p "${STAGING}/lib"
   cp "${ROOT}/lib/README.md" "${STAGING}/lib/README.md"

@@ -27,7 +27,45 @@ Environment variables (optional):
 brew tap wswenyue/aklog && brew install aklog
 ```
 
-Uses system `python3` when available; otherwise Homebrew installs [python](https://formulae.brew.sh/formula/python) as a dependency. Runtime Python packages (`rich`, `tomli` on Python &lt; 3.11) are installed automatically during `brew install`.
+Uses system `python3` when available; otherwise Homebrew installs [python](https://formulae.brew.sh/formula/python) as a dependency. Runtime Python packages (`rich`, `argcomplete`, `tomli` on Python &lt; 3.11) are installed automatically during `brew install`.
+
+### Shell completion
+
+Tab completion is powered by [argcomplete](https://github.com/kislyuk/argcomplete). It completes subcommands, options, log levels, and connected device IDs (`-d`).
+
+**Homebrew (recommended):** zsh completion is installed to `share/zsh/site-functions/_aklog` automatically. Restart your shell after `brew install aklog`.
+
+**Oh My Zsh:**
+
+```shell
+git clone https://github.com/wswenyue/aklog.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/aklog
+# ~/.zshrc
+plugins=(... aklog)
+```
+
+Or source the bundled plugin when running from a local checkout:
+
+```shell
+source /path/to/aklog/contrib/zsh/aklog.plugin.zsh
+```
+
+**Zsh (manual / from source):**
+
+```shell
+# ~/.zshrc
+fpath=(/path/to/aklog/contrib/zsh $fpath)
+autoload -U compinit && compinit
+```
+
+**Zsh / Bash (one-liner):**
+
+```shell
+eval "$(register-python-argcomplete aklog)"   # add to ~/.zshrc or ~/.bashrc
+```
+
+If completion does not work on an older setup, try `autoload -U bashcompinit && bashcompinit` before the `eval` line.
+
+Device ID completion (`-d`) requires adb/hdc tools and at least one connected device.
 
 ### Update
 

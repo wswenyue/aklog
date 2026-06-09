@@ -1,0 +1,5 @@
+#compdef aklog
+
+if (( $+commands[register-python-argcomplete] )); then
+  eval "$(register-python-argcomplete aklog)"
+fi

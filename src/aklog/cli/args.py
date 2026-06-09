@@ -337,7 +337,13 @@ class AkLogCli:
         return args_parser
 
     def parse(self, argv=None):
+        import argcomplete
+
+        from aklog.cli.completion import register_completers
+
         parser = self.build_parser()
+        register_completers(parser)
+        argcomplete.autocomplete(parser)
         args = parser.parse_args(args=argv)
         args_dict = vars(args)
         self._apply_package_default(args_dict)

@@ -1,4 +1,5 @@
 #!/bin/bash
+# PYTHON_ARGCOMPLETE_OK
 # Author: wswenyue.
 # Date & Time: 2018-11-05 18:59:31
 # Description: a bash script

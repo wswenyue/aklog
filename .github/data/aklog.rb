@@ -23,18 +23,19 @@ class Aklog < Formula
   end
 
   def install
+    # Install completions from buildpath before libexec.install moves the tree.
+    install_bash_completion
+    install_zsh_completion
     libexec.install Dir["*"]
     inreplace libexec/"aklog", /^AKLOG_PYTHON=__AKLOG_PYTHON__$/,
                 "AKLOG_PYTHON=#{selected_python}"
     bin.install_symlink libexec/"aklog"
     system selected_python, "-m", "pip", "install", "rich", "tomli", "argcomplete"
-    install_bash_completion
-    install_zsh_completion
   end
 
   def install_bash_completion
-    if (libexec/"contrib/bash/aklog").exist?
-      bash_completion.install libexec/"contrib/bash/aklog"
+    if (buildpath/"contrib/bash/aklog").exist?
+      bash_completion.install "contrib/bash/aklog"
     else
       (bash_completion/"aklog").write <<~EOS
         # bash completion for aklog
@@ -46,8 +47,8 @@ class Aklog < Formula
   end
 
   def install_zsh_completion
-    if (libexec/"contrib/zsh/_aklog").exist?
-      zsh_completion.install libexec/"contrib/zsh/_aklog"
+    if (buildpath/"contrib/zsh/_aklog").exist?
+      zsh_completion.install "contrib/zsh/_aklog"
     else
       (zsh_completion/"_aklog").write <<~EOS
         #compdef aklog

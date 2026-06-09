@@ -28,10 +28,10 @@ class ColorConfig:
     tag_style: str = "bold underline"
     msg_style: str = "bold"
     verbose: LevelColors = field(default_factory=lambda: LevelColors("grey50", "grey62"))
-    debug: LevelColors = field(default_factory=lambda: LevelColors("dark_sea_green2", "spring_green2"))
+    debug: LevelColors = field(default_factory=lambda: LevelColors("dark_sea_green3", "aquamarine1"))
     info: LevelColors = field(default_factory=lambda: LevelColors("steel_blue3", "bright_blue"))
     warn: LevelColors = field(default_factory=lambda: LevelColors("dark_goldenrod", "bright_yellow"))
-    error: LevelColors = field(default_factory=lambda: LevelColors("indian_red", "bright_red"))
+    error: LevelColors = field(default_factory=lambda: LevelColors("light_coral", "indian_red1"))
 
 
 @dataclass
@@ -54,8 +54,8 @@ base = "grey50"
 tag = "grey62"
 
 [colors.debug]
-base = "dark_sea_green2"
-tag = "spring_green2"
+base = "dark_sea_green3"
+tag = "aquamarine1"
 
 [colors.info]
 base = "steel_blue3"
@@ -66,8 +66,8 @@ base = "dark_goldenrod"
 tag = "bright_yellow"
 
 [colors.error]
-base = "indian_red"
-tag = "bright_red"
+base = "light_coral"
+tag = "indian_red1"
 
 # Future (not used yet):
 # [defaults]

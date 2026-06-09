@@ -130,8 +130,8 @@ base = "grey50"
 tag = "grey62"
 
 [colors.debug]
-base = "dark_sea_green2"
-tag = "spring_green2"
+base = "dark_sea_green3"
+tag = "aquamarine1"
 
 [colors.info]
 base = "steel_blue3"
@@ -142,8 +142,8 @@ base = "dark_goldenrod"
 tag = "bright_yellow"
 
 [colors.error]
-base = "indian_red"
-tag = "bright_red"
+base = "light_coral"
+tag = "indian_red1"
 ```
 
 **高对比（深色终端友好）：**

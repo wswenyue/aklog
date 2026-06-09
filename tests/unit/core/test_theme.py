@@ -9,16 +9,16 @@ class TestLogColorTheme:
     def test_default_styles_for_debug(self):
         theme = LogColorTheme()
         msg_style = theme.msg_style(LogLevelHelper.DEBUG)
-        assert msg_style.color.name == "spring_green2"
+        assert msg_style.color.name == "aquamarine1"
         assert msg_style.bold is True
         assert not msg_style.reverse
         tag_style = theme.tag_style(LogLevelHelper.DEBUG)
-        assert tag_style.color.name == "dark_sea_green2"
+        assert tag_style.color.name == "dark_sea_green3"
         assert tag_style.bold is True
         assert tag_style.underline is True
         assert not tag_style.reverse
         level_style = theme.level_style(LogLevelHelper.DEBUG)
-        assert level_style.color.name == "spring_green2"
+        assert level_style.color.name == "aquamarine1"
         assert level_style.bold is True
         assert not level_style.underline
 

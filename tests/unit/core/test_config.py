@@ -7,10 +7,10 @@ class TestConfig:
     def test_default_color_config(self):
         colors = config_module.default_color_config()
         assert colors.meta == "grey50"
-        assert colors.debug.base == "dark_sea_green2"
-        assert colors.debug.tag == "spring_green2"
-        assert colors.error.base == "indian_red"
-        assert colors.error.tag == "bright_red"
+        assert colors.debug.base == "dark_sea_green3"
+        assert colors.debug.tag == "aquamarine1"
+        assert colors.error.base == "light_coral"
+        assert colors.error.tag == "indian_red1"
 
     def test_load_config_missing_file(self, monkeypatch, tmp_path):
         monkeypatch.setattr(config_module, "config_path", lambda: str(tmp_path / "missing.toml"))

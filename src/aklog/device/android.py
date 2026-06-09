@@ -63,7 +63,7 @@ class AndroidPlatform(DevicePlatform):
                 cmd = "logcat -v long *:{0}".format(lv)
         return self._helper.popen(
             cmd,
-            buf_size=1,
+            buf_size=0,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=False,

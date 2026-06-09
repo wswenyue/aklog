@@ -292,4 +292,3 @@ class TestAcceptAllFilter:
     def test_accepts_any_log(self):
         assert AcceptAllFilter().accept(_log()) is True
         assert AcceptAllFilter().accept(_log(priority="V", tag="", msg="")) is True
-

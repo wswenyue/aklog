@@ -127,9 +127,9 @@ class TestLogPrintCtr:
 
     def test_prints_with_json_msg_format(self):
         with patch("builtins.print") as mock_print:
-            _printer(
-                msg_processor=MsgProcessor(json_format=JsonValueFormat(_keys=["userId"]))
-            ).print(_log(msg='{"userId":"12345"}'))
+            _printer(msg_processor=MsgProcessor(json_format=JsonValueFormat(_keys=["userId"]))).print(
+                _log(msg='{"userId":"12345"}')
+            )
         mock_print.assert_called_once()
         assert "userId" in mock_print.call_args[0][0]
 

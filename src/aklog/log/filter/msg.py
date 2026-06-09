@@ -1,6 +1,5 @@
 from typing import List, Optional, Union
 
-from aklog.core import comm_tools
 from aklog.core.color_print import ColorStr
 from aklog.log.filter.match import MatchPolicy, StringMatcher
 from aklog.log.format import JsonValueFormat
@@ -24,15 +23,15 @@ class MsgProcessor:
     def accept_msg(self, msg: str) -> bool:
         if StringMatcher.any_exclude(self.exclude_fuzzy, msg, MatchPolicy.FUZZY):
             return False
-        if comm_tools.is_not_empty(self.exclude_exact) and msg in self.exclude_exact:
+        if self.exclude_exact and msg in self.exclude_exact:
             return False
         if self.json_format:
             return True
-        if comm_tools.is_empty(self.include):
-            return True
-        if self.exact:
-            return msg in self.include
-        return StringMatcher.any_include(self.include, msg, MatchPolicy.FUZZY)
+        if self.include:
+            if self.exact:
+                return msg in self.include
+            return StringMatcher.any_include(self.include, msg, MatchPolicy.FUZZY)
+        return True
 
     def process(self, msg: str) -> Optional[Union[str, ColorStr]]:
         if not self.accept_msg(msg):

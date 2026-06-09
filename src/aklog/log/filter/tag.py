@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from aklog.core import comm_tools
 from aklog.log.filter.match import MatchPolicy, StringMatcher
 from aklog.log.info import LogInfo
 
@@ -24,10 +23,10 @@ class TagFilter:
     def accept_tag(self, tag: str) -> bool:
         if StringMatcher.any_exclude(self.exclude_fuzzy, tag, MatchPolicy.FUZZY):
             return False
-        if comm_tools.is_not_empty(self.exclude_exact) and tag in self.exclude_exact:
+        if self.exclude_exact and tag in self.exclude_exact:
             return False
-        if comm_tools.is_empty(self.include):
-            return True
-        if self.exact:
-            return tag in self.include
-        return StringMatcher.any_include(self.include, tag, MatchPolicy.FUZZY)
+        if self.include:
+            if self.exact:
+                return tag in self.include
+            return StringMatcher.any_include(self.include, tag, MatchPolicy.FUZZY)
+        return True

@@ -25,12 +25,12 @@ class StringMatcher:
         haystack: str,
         policy: MatchPolicy,
     ) -> bool:
-        if comm_tools.is_empty(needles):
-            return True
-        for needle in needles:
-            if StringMatcher.matches(needle, haystack, policy):
-                return True
-        return False
+        if needles:
+            for needle in needles:
+                if StringMatcher.matches(needle, haystack, policy):
+                    return True
+            return False
+        return True
 
     @staticmethod
     def any_exclude(
@@ -38,9 +38,8 @@ class StringMatcher:
         haystack: str,
         policy: MatchPolicy,
     ) -> bool:
-        if comm_tools.is_empty(needles):
-            return False
-        for needle in needles:
-            if StringMatcher.matches(needle, haystack, policy):
-                return True
+        if needles:
+            for needle in needles:
+                if StringMatcher.matches(needle, haystack, policy):
+                    return True
         return False

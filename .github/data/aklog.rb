@@ -28,6 +28,7 @@ class Aklog < Formula
                 "AKLOG_PYTHON=#{selected_python}"
     bin.install_symlink libexec/"aklog"
     system selected_python, "-m", "pip", "install", "rich", "tomli", "argcomplete"
+    bash_completion.install "contrib/bash/aklog"
     zsh_completion.install "contrib/zsh/_aklog"
   end
 

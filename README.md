@@ -33,7 +33,10 @@ Uses system `python3` when available; otherwise Homebrew installs [python](https
 
 Tab completion is powered by [argcomplete](https://github.com/kislyuk/argcomplete). It completes subcommands, options, log levels, and connected device IDs (`-d`).
 
-**Homebrew (recommended):** zsh completion is installed to `share/zsh/site-functions/_aklog` automatically. Restart your shell after `brew install aklog`.
+**Homebrew (recommended):** shell completion is installed automatically:
+
+- zsh → `share/zsh/site-functions/_aklog` (restart shell after `brew install aklog`)
+- bash → `etc/bash_completion.d/aklog` (requires [bash-completion](https://formulae.brew.sh/formula/bash-completion); add `[[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"` to `~/.bash_profile` if not already enabled)
 
 **Oh My Zsh:**
 
@@ -55,6 +58,12 @@ source /path/to/aklog/contrib/zsh/aklog.plugin.zsh
 # ~/.zshrc
 fpath=(/path/to/aklog/contrib/zsh $fpath)
 autoload -U compinit && compinit
+```
+
+**Bash (manual / from source):**
+
+```shell
+source /path/to/aklog/contrib/bash/aklog   # or add eval line below to ~/.bashrc
 ```
 
 **Zsh / Bash (one-liner):**

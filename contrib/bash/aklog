@@ -1,0 +1,5 @@
+# bash completion for aklog
+
+if type register-python-argcomplete &>/dev/null; then
+  eval "$(register-python-argcomplete aklog)"
+fi

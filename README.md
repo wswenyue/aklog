@@ -40,7 +40,9 @@ Tab 补全由 [argcomplete](https://github.com/kislyuk/argcomplete) 提供，可
 ### 更新
 
 ```shell
-brew upgrade aklog
+$ brew upgrade aklog
+# or 
+$ brew uninstall aklog && brew untap wswenyue/aklog && brew tap wswenyue/aklog && brew install aklog
 ```
 
 ### 用法

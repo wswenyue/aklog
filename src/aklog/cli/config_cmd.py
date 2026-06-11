@@ -37,12 +37,13 @@ def run_config_command(args: dict) -> bool:
         if not sub:
             print("Usage: aklog config filter <list|show|use|get|set|unset|new|delete|edit>")
             return True
-        run_filter_command(sub, args)
+        run_filter_command(str(sub), args)
         return True
     if action == "colors":
         from aklog.cli.config_colors import run_colors_command
 
-        run_colors_command(args.get("colors_action"), args)
+        colors_action = args.get("colors_action")
+        run_colors_command(colors_action if isinstance(colors_action, str) else None, args)
         return True
     print("Unknown config action: {0}".format(action))
     return True

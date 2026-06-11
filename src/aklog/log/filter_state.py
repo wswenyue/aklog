@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from aklog.core.filter_config import FilterProfile, PlatformFilterOverride
 from aklog.core.filter_merge import effective_filter_to_args, resolve_effective_filter
@@ -24,7 +24,7 @@ class FilterState:
     msg_exact: bool = False
     msg_exclude: List[str] = field(default_factory=list)
     msg_exclude_exact: List[str] = field(default_factory=list)
-    level: Optional[str] = None
+    level: str | None = None
     dirty: bool = False
 
     def copy(self) -> FilterState:

@@ -13,11 +13,11 @@ from aklog.device.manager import list_all_devices
 
 _LEVEL_CHOICES = ["V", "D", "I", "W", "E", "2", "3", "4", "5", "6"]
 _DUMP_TYPE_CHOICES = ["0", "1"]
-_FILTER_KEYS = list(FILTER_FIELD_KEYS) + [
-    "android.{0}".format(k) for k in FILTER_FIELD_KEYS if k != "platform"
-] + [
-    "harmony.{0}".format(k) for k in FILTER_FIELD_KEYS if k != "platform"
-]
+_FILTER_KEYS = (
+    list(FILTER_FIELD_KEYS)
+    + ["android.{0}".format(k) for k in FILTER_FIELD_KEYS if k != "platform"]
+    + ["harmony.{0}".format(k) for k in FILTER_FIELD_KEYS if k != "platform"]
+)
 
 
 def _device_completer(prefix, **kwargs):

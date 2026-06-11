@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from aklog.core.color_presets import COLOR_FIELDS, COLOR_PALETTE, PRESETS, get_color_field, set_color_field
-from aklog.core.config import AklogConfig, default_color_config, load_config, save_config
+from aklog.core.config import default_color_config, load_config, save_config
 from aklog.log.preview import render_log_preview
 from aklog.log.theme import LogColorTheme
 
@@ -127,7 +127,7 @@ def run_colors_editor() -> None:
                 set_color_field(draft, field, color)
 
 
-def run_colors_command(action: str, args: dict) -> bool:
+def run_colors_command(action: str | None, args: dict) -> bool:
     if action is None or action == "edit":
         run_colors_editor()
         return True
@@ -138,9 +138,9 @@ def run_colors_command(action: str, args: dict) -> bool:
         colors_reset()
         return True
     if action == "get":
-        colors_get(args.get("color_key"))
+        colors_get(str(args["color_key"]))
         return True
     if action == "set":
-        colors_set(args.get("color_key"), args.get("color_value"))
+        colors_set(str(args["color_key"]), str(args["color_value"]))
         return True
     return False

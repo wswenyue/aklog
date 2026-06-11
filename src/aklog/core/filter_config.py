@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 PACKAGE_MODES = ("top", "all", "target", "exclude")
 PLATFORM_OVERRIDE_KEYS = ("android", "harmony")
@@ -26,14 +26,14 @@ FILTER_FIELD_KEYS = (
 
 @dataclass
 class PlatformFilterOverride:
-    package_mode: Optional[str] = None
+    package_mode: str | None = None
     package: List[str] = field(default_factory=list)
     tag: List[str] = field(default_factory=list)
-    tag_exact: Optional[bool] = None
+    tag_exact: bool | None = None
     tag_exclude: List[str] = field(default_factory=list)
     tag_exclude_exact: List[str] = field(default_factory=list)
     msg: List[str] = field(default_factory=list)
-    msg_exact: Optional[bool] = None
+    msg_exact: bool | None = None
     msg_exclude: List[str] = field(default_factory=list)
     msg_exclude_exact: List[str] = field(default_factory=list)
 

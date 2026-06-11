@@ -6,7 +6,7 @@ import signal
 import sys
 import threading
 from enum import Enum
-from typing import Callable, Optional
+from typing import Callable
 
 from aklog.cli.config_filter import load_filter_state_for_device, save_filter_state_to_config
 from aklog.cli.filter_editor import run_filter_field_editor
@@ -61,7 +61,7 @@ def _parse_command(line: str, ctx: RuntimeContext) -> bool:
     if cmd == "profile" and arg:
         config = load_config()
         if arg not in config.filter.profiles:
-            print_error('方案不存在: {0}'.format(arg))
+            print_error("方案不存在: {0}".format(arg))
             return True
         ctx.filter_state = load_filter_state_for_device(arg, ctx.device_platform)
         ctx.filter_state.dirty = True
@@ -87,7 +87,7 @@ def _parse_command(line: str, ctx: RuntimeContext) -> bool:
     return True
 
 
-def _read_key() -> Optional[str]:
+def _read_key() -> str | None:
     try:
         import readchar
 
@@ -235,7 +235,7 @@ def run_with_runtime_ui(platform, log_printer, cli, level_arg=None, no_interacti
     state = load_filter_state_for_device(config.filter.active, platform.platform)
     device_label = "{0}:{1}".format(platform.platform, platform.device_id)
 
-    controller: Optional[RuntimeController] = None
+    controller: RuntimeController | None = None
     if _is_interactive_enabled(no_interactive):
         ctx = RuntimeContext(device_label, platform.platform, state)
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List
 
 from rich.console import Console
 from rich.table import Table
@@ -27,8 +27,8 @@ console = Console()
 @dataclass
 class FilterPath:
     profile: str
-    platform: Optional[str]
-    key: Optional[str]
+    platform: str | None
+    key: str | None
 
 
 def parse_filter_path(path: str) -> FilterPath:
@@ -93,9 +93,16 @@ def _set_value(obj, key: str, value: Any) -> None:
         value = validate_platform_pref(str(value))
     elif key in ("tag_exact", "msg_exact"):
         value = _parse_bool_value(str(value)) if isinstance(value, str) else bool(value)
-    elif key in ("package", "tag", "tag_exclude", "tag_exclude_exact", "msg", "msg_exclude", "msg_exclude_exact"):
-        if isinstance(value, str):
-            value = _parse_list_value(value)
+    elif key in (
+        "package",
+        "tag",
+        "tag_exclude",
+        "tag_exclude_exact",
+        "msg",
+        "msg_exclude",
+        "msg_exclude_exact",
+    ) and isinstance(value, str):
+        value = _parse_list_value(value)
     setattr(obj, key, value)
 
 
@@ -156,7 +163,7 @@ def filter_list() -> None:
         console.print("{0}{1}".format(name, marker))
 
 
-def filter_show(name: Optional[str] = None) -> None:
+def filter_show(name: str | None = None) -> None:
     config = load_config()
     profile_name = name or config.filter.active
     profile = config.filter.profiles.get(profile_name)
@@ -193,7 +200,7 @@ def filter_use(name: str) -> None:
     console.print("Active profile: {0}".format(name))
 
 
-def filter_new(name: str, copy_from: Optional[str] = None) -> None:
+def filter_new(name: str, copy_from: str | None = None) -> None:
     config = load_config()
     validate_profile_name(name)
     if name in config.filter.profiles:
@@ -251,27 +258,34 @@ def run_filter_command(action: str, args: dict) -> bool:
         filter_list()
         return True
     if action == "show":
-        filter_show(args.get("filter_name"))
+        filter_name = args.get("filter_name")
+        filter_show(str(filter_name) if isinstance(filter_name, str) else None)
         return True
     if action == "use":
-        filter_use(args.get("filter_name"))
+        filter_use(str(args["filter_name"]))
         return True
     if action == "get":
-        print(filter_get(args.get("filter_path")))
+        print(filter_get(str(args["filter_path"])))
         return True
     if action == "set":
-        filter_set(args.get("filter_path"), args.get("filter_value"))
-        console.print("Updated {0}".format(args.get("filter_path")))
+        filter_path = str(args["filter_path"])
+        filter_set(filter_path, str(args["filter_value"]))
+        console.print("Updated {0}".format(filter_path))
         return True
     if action == "unset":
-        filter_unset(args.get("filter_path"))
-        console.print("Unset {0}".format(args.get("filter_path")))
+        filter_path = str(args["filter_path"])
+        filter_unset(filter_path)
+        console.print("Unset {0}".format(filter_path))
         return True
     if action == "new":
-        filter_new(args.get("filter_name"), args.get("copy_from"))
+        copy_from = args.get("copy_from")
+        filter_new(
+            str(args["filter_name"]),
+            str(copy_from) if isinstance(copy_from, str) else None,
+        )
         return True
     if action == "delete":
-        filter_delete(args.get("filter_name"))
+        filter_delete(str(args["filter_name"]))
         return True
     if action == "edit":
         from aklog.cli.filter_editor import run_filter_edit_wizard

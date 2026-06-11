@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Optional, Set
+from typing import Dict, Iterable, List, Set
 
 from aklog.core.config import AklogConfig
 from aklog.core.filter_config import FILTER_FIELD_KEYS, PLATFORM_OVERRIDE_KEYS, FilterProfile
-
 
 FILTER_FLAG_MAP = {
     "-p": "package",
@@ -38,7 +37,7 @@ FILTER_FLAG_MAP = {
 }
 
 
-def detect_explicit_filter_flags(argv: Optional[Iterable[str]]) -> Set[str]:
+def detect_explicit_filter_flags(argv: Iterable[str] | None) -> Set[str]:
     if not argv:
         return set()
     explicit: Set[str] = set()
@@ -58,7 +57,7 @@ def _merge_lists(base_list: List[str], override_list: List[str]) -> List[str]:
     return list(base_list)
 
 
-def resolve_effective_filter(profile: FilterProfile, platform: Optional[str] = None) -> FilterProfile:
+def resolve_effective_filter(profile: FilterProfile, platform: str | None = None) -> FilterProfile:
     effective = profile.copy()
     if not platform:
         return effective
@@ -140,7 +139,7 @@ def effective_filter_to_args(effective: FilterProfile) -> Dict:
     return args
 
 
-def merge_into_args(args_dict: Dict, config: AklogConfig, platform: Optional[str], explicit_flags: Set[str]) -> Dict:
+def merge_into_args(args_dict: Dict, config: AklogConfig, platform: str | None, explicit_flags: Set[str]) -> Dict:
     profile = get_active_profile(config)
     effective = resolve_effective_filter(profile, platform)
     config_args = effective_filter_to_args(effective)
@@ -162,8 +161,8 @@ def merge_into_args(args_dict: Dict, config: AklogConfig, platform: Optional[str
             dest = "msg_not_exact"
         if dest in explicit_flags:
             continue
-        if dest in config_args and config_args[dest] is not None:
-            args_dict[dest] = config_args[dest]
-        elif dest in config_args and config_args[dest] is True:
+        if (dest in config_args and config_args[dest] is not None) or (
+            dest in config_args and config_args[dest] is True
+        ):
             args_dict[dest] = config_args[dest]
     return args_dict

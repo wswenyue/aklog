@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from typing import Optional
-
-from aklog.core.filter_config import PACKAGE_MODES, PLATFORM_OVERRIDE_KEYS, validate_package_mode, validate_platform_pref
+from aklog.core.filter_config import (
+    PACKAGE_MODES,
+    PLATFORM_OVERRIDE_KEYS,
+    validate_package_mode,
+    validate_platform_pref,
+)
 from aklog.log.filter_state import FilterState
 
 
@@ -96,7 +99,7 @@ def run_profile_platform_pref_editor(current: str = "") -> str:
     return validate_platform_pref(choice)
 
 
-def run_filter_edit_wizard(profile_name: str, state: FilterState, base_platform_pref: str = "") -> Optional[FilterState]:
+def run_filter_edit_wizard(profile_name: str, state: FilterState, base_platform_pref: str = "") -> FilterState | None:
     if not _is_tty():
         return None
     import questionary

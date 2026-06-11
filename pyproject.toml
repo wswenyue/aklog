@@ -7,14 +7,17 @@ where = ["src"]
 
 [project]
 name = "aklog"
-version = "5.3.44"
+version = "5.4.0"
 description = "Android & HarmonyOS developer Swiss Army Knife for Log"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "argcomplete>=3.0",
+    "questionary>=2.0",
+    "readchar>=4.0",
     "rich>=13.7",
     "tomli>=2.0; python_version < '3.11'",
+    "tomlkit>=0.12",
 ]
 
 [project.optional-dependencies]

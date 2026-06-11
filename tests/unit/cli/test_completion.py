@@ -43,4 +43,5 @@ class TestRegisterCompleters:
     def test_parse_still_works_after_completion_hook(self):
         cli = AkLogCli()
         args = cli.parse([])
+        cli.apply_package_default(args)
         assert args["package_current_top"] is True

@@ -6,10 +6,18 @@ import argparse
 
 from argcomplete.completers import ChoicesCompleter, FilesCompleter
 
+from aklog.core.color_presets import COLOR_FIELDS
+from aklog.core.config import load_config
+from aklog.core.filter_config import FILTER_FIELD_KEYS
 from aklog.device.manager import list_all_devices
 
 _LEVEL_CHOICES = ["V", "D", "I", "W", "E", "2", "3", "4", "5", "6"]
 _DUMP_TYPE_CHOICES = ["0", "1"]
+_FILTER_KEYS = list(FILTER_FIELD_KEYS) + [
+    "android.{0}".format(k) for k in FILTER_FIELD_KEYS if k != "platform"
+] + [
+    "harmony.{0}".format(k) for k in FILTER_FIELD_KEYS if k != "platform"
+]
 
 
 def _device_completer(prefix, **kwargs):
@@ -18,6 +26,23 @@ def _device_completer(prefix, **kwargs):
     except Exception:
         return []
     return [d.device_id for d in devices if d.device_id.startswith(prefix)]
+
+
+def _profile_completer(prefix, **kwargs):
+    try:
+        config = load_config()
+        names = list(config.filter.profiles.keys())
+    except Exception:
+        return []
+    return [n for n in names if n.startswith(prefix)]
+
+
+def _filter_key_completer(prefix, **kwargs):
+    return [k for k in _FILTER_KEYS if k.startswith(prefix)]
+
+
+def _color_key_completer(prefix, **kwargs):
+    return [k for k in COLOR_FIELDS if k.startswith(prefix)]
 
 
 def _iter_parsers(parser):
@@ -44,3 +69,9 @@ def register_completers(parser):
                 action.completer = type_completer
             elif action.dest == "path" and action.required:
                 action.completer = install_path_completer
+            elif action.dest == "filter_name":
+                action.completer = _profile_completer
+            elif action.dest == "filter_path":
+                action.completer = _filter_key_completer
+            elif action.dest == "color_key":
+                action.completer = _color_key_completer

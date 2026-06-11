@@ -65,9 +65,46 @@ aklog config path                  # 显示配置文件路径
 用户配置保存在 `~/.config/aklog/config.toml`（Windows 为 `%APPDATA%\aklog\config.toml`）。
 
 ```shell
-aklog config init      # 生成默认配色主题
-aklog config path      # 打印配置文件路径
+aklog config init              # 生成默认配置（配色 + 过滤）
+aklog config path              # 打印配置文件路径
+aklog config migrate           # 为旧配置插入 [filter] 段
+aklog config console           # 交互式配置控制台
+aklog config filter list       # 列出过滤方案
+aklog config filter use work   # 切换激活方案
+aklog config filter edit       # 交互编辑过滤
+aklog config colors            # 交互编辑配色（色表 + 预览）
+aklog help runtime             # 运行期快捷键说明
 ```
+
+#### 全局过滤方案
+
+`[filter]` 支持命名方案与按平台（`android` / `harmony`）覆盖，启动时与 CLI 参数按字段合并（CLI 显式参数优先）。
+
+```toml
+[filter]
+active = "default"
+
+[filter.profiles.default]
+package_mode = "top"
+tag = ["Network"]
+
+[filter.profiles.default.android]
+package_mode = "target"
+package = ["com.example.android"]
+```
+
+#### 运行期交互
+
+日志流运行时（TTY 下）支持：
+
+| 按键 | 作用 |
+|------|------|
+| F1 / ? | 帮助 |
+| F2 | 过滤编辑 |
+| F3 | 切换方案 |
+| `:` | 命令模式（`:tag` `:pkg` `:profile` `:w` `:q`） |
+
+使用 `--no-interactive` 可禁用运行期键盘交互与状态栏（管道/CI 场景）。
 
 编辑 `[colors]` 可自定义各级别日志颜色。支持 [Rich](https://rich.readthedocs.io/en/stable/appendix/colors.html) 颜色名（如 `green`、`bright_blue`）及十六进制色值（如 `#ff6600`）。无效值会自动回退到内置默认配色。
 

@@ -17,6 +17,7 @@ class TestAkLogCliParse:
 
     def test_default_package_is_current_top(self, cli):
         args = cli.parse([])
+        cli.apply_package_default(args)
         assert args["package_current_top"] is True
         assert args["package_all"] is False
 
@@ -133,7 +134,9 @@ class TestAkLogCliParse:
 
 class TestAkLogCliBuildLogPrinter:
     def test_default_builds_top_package_filter(self, cli):
-        printer = cli.build_log_printer(cli.parse([]))
+        args = cli.parse([])
+        cli.apply_package_default(args)
+        printer = cli.build_log_printer(args)
         package_filter = printer.filters.filters[0]
         assert package_filter.mode == PackageMode.TOP
 

@@ -71,3 +71,29 @@ tag = "bright_magenta"
     def test_config_dir_uses_xdg(self, monkeypatch, tmp_path):
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
         assert config_module.config_dir() == str(tmp_path / "aklog")
+
+    def test_load_config_with_filter(self, monkeypatch, tmp_path):
+        path = tmp_path / "config.toml"
+        path.write_text(
+            """
+[filter]
+active = "work"
+
+[filter.profiles.work]
+package_mode = "all"
+tag = ["Network"]
+""".strip(),
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(config_module, "config_path", lambda: str(path))
+        loaded = config_module.load_config()
+        assert loaded.filter.active == "work"
+        assert loaded.filter.profiles["work"].package_mode == "all"
+        assert loaded.filter.profiles["work"].tag == ["Network"]
+
+    def test_save_config_atomic(self, monkeypatch, tmp_path):
+        path = tmp_path / "config.toml"
+        monkeypatch.setattr(config_module, "config_path", lambda: str(path))
+        config_module.save_config(config_module.AklogConfig())
+        assert path.is_file()
+        assert "[filter]" in path.read_text(encoding="utf-8")

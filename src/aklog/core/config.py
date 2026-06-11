@@ -4,15 +4,19 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
-from aklog.core import comm_tools
+import tomlkit
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
+from aklog.core import comm_tools
+from aklog.core.filter_config import (
+    FilterConfig,
+    default_filter_config,
+    filter_config_to_toml_dict,
+    parse_filter_config,
+)
 
 
 @dataclass
@@ -37,6 +41,7 @@ class ColorConfig:
 @dataclass
 class AklogConfig:
     colors: ColorConfig = field(default_factory=ColorConfig)
+    filter: FilterConfig = field(default_factory=default_filter_config)
 
 
 DEFAULT_CONFIG_TEMPLATE = """\
@@ -69,10 +74,21 @@ tag = "bright_yellow"
 base = "light_coral"
 tag = "indian_red1"
 
-# Future (not used yet):
-# [defaults]
-# level = "D"
-# device = "emulator-5554"
+[filter]
+active = "default"
+
+[filter.profiles.default]
+platform = ""
+package_mode = "top"
+package = []
+tag = []
+tag_exact = false
+tag_exclude = []
+tag_exclude_exact = []
+msg = []
+msg_exact = false
+msg_exclude = []
+msg_exclude_exact = []
 """
 
 
@@ -188,32 +204,87 @@ def _print_config_warning(message: str) -> None:
         print(f"aklog: warning: {message}", file=sys.stderr)
 
 
+def _load_toml_dict(path: str) -> Dict[str, Any]:
+    with open(path, encoding="utf-8") as handle:
+        doc = tomlkit.parse(handle.read())
+    if not isinstance(doc, dict):
+        raise ValueError("config root must be a table")
+    return doc
+
+
+def _color_config_to_toml_dict(colors: ColorConfig) -> Dict[str, Any]:
+    return {
+        "meta": colors.meta,
+        "level_style": colors.level_style,
+        "tag_style": colors.tag_style,
+        "msg_style": colors.msg_style,
+        "verbose": {"base": colors.verbose.base, "tag": colors.verbose.tag},
+        "debug": {"base": colors.debug.base, "tag": colors.debug.tag},
+        "info": {"base": colors.info.base, "tag": colors.info.tag},
+        "warn": {"base": colors.warn.base, "tag": colors.warn.tag},
+        "error": {"base": colors.error.base, "tag": colors.error.tag},
+    }
+
+
+def _build_toml_document(config: AklogConfig) -> tomlkit.TOMLDocument:
+    doc = tomlkit.document()
+    doc["colors"] = _color_config_to_toml_dict(config.colors)
+    doc["filter"] = filter_config_to_toml_dict(config.filter)
+    return doc
+
+
 def load_config() -> AklogConfig:
     path = config_path()
     if not os.path.isfile(path):
         return AklogConfig()
     try:
-        with open(path, "rb") as handle:
-            data = tomllib.load(handle)
-        if not isinstance(data, dict):
-            raise ValueError("config root must be a table")
+        data = _load_toml_dict(path)
         colors = _validate_color_config(_parse_colors(data))
-        return AklogConfig(colors=colors)
+        filter_cfg = parse_filter_config(data)
+        filter_cfg.ensure_default_profile()
+        return AklogConfig(colors=colors, filter=filter_cfg)
     except Exception as exc:
         _print_config_warning(f"failed to load config from {path}: {exc}")
         return AklogConfig()
 
 
-def init_config_file(force: bool = False) -> tuple[str, bool]:
-    """
-    Write default config template.
+def save_config(config: AklogConfig, path: str | None = None) -> str:
+    target = path or config_path()
+    comm_tools.create_dir_not_exists(target)
+    config.filter.ensure_default_profile()
+    validated = AklogConfig(colors=_validate_color_config(config.colors), filter=config.filter)
+    doc = _build_toml_document(validated)
+    content = tomlkit.dumps(doc)
+    directory = os.path.dirname(target) or "."
+    fd, tmp_path = tempfile.mkstemp(prefix=".config-", suffix=".toml", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(content)
+        os.replace(tmp_path, target)
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+    return target
 
-    Returns (path, created). created is False when file exists and force is False.
-    """
+
+def init_config_file(force: bool = False) -> tuple[str, bool]:
     path = config_path()
     if os.path.isfile(path) and not force:
         return path, False
     comm_tools.create_dir_not_exists(path)
-    with open(path, "w", encoding="utf-8") as handle:
-        handle.write(DEFAULT_CONFIG_TEMPLATE)
+    save_config(AklogConfig())
+    return path, True
+
+
+def migrate_config_file() -> tuple[str, bool]:
+    """Insert [filter] section into existing config without overwriting colors."""
+    path = config_path()
+    if not os.path.isfile(path):
+        return init_config_file(force=False)
+    data = _load_toml_dict(path)
+    if "filter" in data:
+        return path, False
+    config = load_config()
+    save_config(config, path=path)
     return path, True

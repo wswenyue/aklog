@@ -65,6 +65,7 @@ class AkLogCli:
     dest_msg_json_value = "msg_json_value"
     dest_level = "level"
     dest_cmd = "cmd"
+    dest_no_interactive = "no_interactive"
     cmd_name_define = {}
 
     def __init__(self):
@@ -103,8 +104,10 @@ class AkLogCli:
             nargs="+",
         )
 
-    def _apply_package_default(self, args):
-        if args[self.dest_package] or args[self.dest_package_not] or args[self.dest_package_all]:
+    def apply_package_default(self, args):
+        if args.get(self.dest_package) or args.get(self.dest_package_not) or args.get(self.dest_package_all):
+            return
+        if args.get(self.dest_package_current_top):
             return
         args[self.dest_package_current_top] = True
 
@@ -296,6 +299,15 @@ class AkLogCli:
         self.cmd_name_define["install"] = ["install", "i"]
         install.add_argument("-path", type=str, required=True, help="本地安装包路径")
 
+        help_cmd = comm_cmd.add_parser("help", help="帮助")
+        self.cmd_name_define["help"] = ["help"]
+        help_sub = help_cmd.add_subparsers(dest="help_action", parser_class=ChineseArgumentParser)
+        try:
+            help_sub.required = True
+        except AttributeError:
+            pass
+        help_sub.add_parser("runtime", help="运行期快捷键说明")
+
         config = comm_cmd.add_parser("config", help="配置管理")
         self.cmd_name_define["config"] = ["config"]
         config_sub = config.add_subparsers(
@@ -311,6 +323,48 @@ class AkLogCli:
         config_init = config_sub.add_parser("init", help="生成默认配置文件")
         config_init.add_argument("--force", action="store_true", help="覆盖已有配置文件")
         config_sub.add_parser("path", help="显示配置文件路径")
+        config_sub.add_parser("migrate", help="为已有配置插入 filter 段")
+        config_sub.add_parser("console", help="交互式配置控制台")
+
+        filter_cmd = config_sub.add_parser("filter", help="过滤方案管理")
+        filter_sub = filter_cmd.add_subparsers(dest="filter_action", parser_class=ChineseArgumentParser)
+        try:
+            filter_sub.required = True
+        except AttributeError:
+            pass
+        filter_sub.add_parser("list", help="列出过滤方案")
+        filter_show = filter_sub.add_parser("show", help="显示过滤方案")
+        filter_show.add_argument("filter_name", nargs="?", default=None, help="方案名")
+        filter_use = filter_sub.add_parser("use", help="切换激活方案")
+        filter_use.add_argument("filter_name", help="方案名")
+        filter_get = filter_sub.add_parser("get", help="读取字段")
+        filter_get.add_argument("filter_path", help="如 default.tag 或 default.android.package")
+        filter_set = filter_sub.add_parser("set", help="设置字段")
+        filter_set.add_argument("filter_path", help="点分路径")
+        filter_set.add_argument("filter_value", help="值")
+        filter_unset = filter_sub.add_parser("unset", help="删除字段")
+        filter_unset.add_argument("filter_path", help="点分路径")
+        filter_new = filter_sub.add_parser("new", help="新建方案")
+        filter_new.add_argument("filter_name", help="方案名")
+        filter_new.add_argument("--copy-from", dest="copy_from", default=None, help="复制自方案")
+        filter_delete = filter_sub.add_parser("delete", help="删除方案")
+        filter_delete.add_argument("filter_name", help="方案名")
+        filter_edit = filter_sub.add_parser("edit", help="交互编辑方案")
+        filter_edit.add_argument("filter_name", nargs="?", default=None, help="方案名")
+
+        colors_cmd = config_sub.add_parser("colors", help="配色管理")
+        colors_sub = colors_cmd.add_subparsers(dest="colors_action", parser_class=ChineseArgumentParser)
+        try:
+            colors_sub.required = False
+        except AttributeError:
+            pass
+        colors_sub.add_parser("show", help="显示配色预览")
+        colors_sub.add_parser("reset", help="恢复默认配色")
+        colors_get = colors_sub.add_parser("get", help="读取配色字段")
+        colors_get.add_argument("color_key", help="如 debug.base")
+        colors_set = colors_sub.add_parser("set", help="设置配色字段")
+        colors_set.add_argument("color_key", help="配色字段")
+        colors_set.add_argument("color_value", help="颜色值")
 
     def build_parser(self):
         desc = "AKLog-{0} (Android & HarmonyOS developer Swiss Army Knife for Log)".format(self.AK_LOG_VERSION)
@@ -333,6 +387,12 @@ class AkLogCli:
         self._define_args_tag(args_parser)
         self._define_args_msg(args_parser)
         self._define_args_level(args_parser)
+        args_parser.add_argument(
+            "--no-interactive",
+            dest=self.dest_no_interactive,
+            action="store_true",
+            help="禁用运行期键盘交互与状态栏",
+        )
         self._define_args_cmd(args_parser)
         return args_parser
 
@@ -345,9 +405,7 @@ class AkLogCli:
         register_completers(parser)
         argcomplete.autocomplete(parser)
         args = parser.parse_args(args=argv)
-        args_dict = vars(args)
-        self._apply_package_default(args_dict)
-        return args_dict
+        return vars(args)
 
     def build_log_printer(self, args):
         color_theme = LogColorTheme(load_config().colors)
@@ -367,6 +425,14 @@ class AkLogCli:
         cmd = args[self.dest_cmd]
         if comm_tools.is_empty(cmd):
             return False
+        if cmd in self.cmd_name_define.get("help", []):
+            from aklog.cli.runtime_help import print_runtime_help_text
+
+            if args.get("help_action") == "runtime":
+                print_runtime_help_text()
+                return True
+            print("Unknown help action.")
+            return True
         if cmd in self.cmd_name_define["config"]:
             from aklog.cli.config_cmd import run_config_command
 

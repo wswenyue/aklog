@@ -69,12 +69,13 @@ class TestRunLog:
 
     def test_main_runs_log_when_no_subcommand(self):
         fake_platform = MagicMock()
+        fake_platform.platform = "android"
         with (
             patch("aklog.cli.commands.resolve_device", return_value=fake_platform),
-            patch("aklog.cli.commands.run_log") as run_log_mock,
+            patch("aklog.cli.runtime_ui.run_with_runtime_ui") as run_ui_mock,
         ):
             commands.main([])
-        run_log_mock.assert_called_once()
+        run_ui_mock.assert_called_once()
 
     def test_main_returns_early_on_subcommand(self):
         fake_platform = MagicMock()

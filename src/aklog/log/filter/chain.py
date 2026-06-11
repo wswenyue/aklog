@@ -20,6 +20,9 @@ class FilterChain:
     def accept(self, log: LogInfo) -> bool:
         return all(f.accept(log) for f in self._filters)
 
+    def replace_filters(self, filters: Iterable[LogFilter]) -> None:
+        self._filters = tuple(filters)
+
     @classmethod
     def empty(cls) -> "FilterChain":
         return cls([AcceptAllFilter()])

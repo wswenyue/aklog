@@ -168,12 +168,31 @@ jobs:
           pattern: aklog-darwin-*
           merge-multiple: true
 
+      # 对比上一个已发布的 Release，而非上一个 git tag（打包失败时 tag 会残留但无 Release）
+      - name: Resolve previous published release
+        id: prev_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          CURRENT="${GITHUB_REF_NAME}"
+          PREVIOUS=$(gh release list --limit 50 --json tagName \
+            | jq -r --arg current "$CURRENT" \
+              '[.[] | select(.tagName != $current)] | .[0].tagName // empty')
+          if [ -n "$PREVIOUS" ]; then
+            echo "previous_tag=${PREVIOUS}" >> "$GITHUB_OUTPUT"
+            echo "Full Changelog: ${PREVIOUS}...${CURRENT}"
+          else
+            echo "No previous published release (first release)."
+          fi
+
       - name: Create GitHub Release and upload assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.6.2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
+          previous_tag: ${{ steps.prev_release.outputs.previous_tag }}
           files: dist/*.tar.gz
 
   formula:

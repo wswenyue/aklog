@@ -176,7 +176,11 @@ jobs:
         run: |
           set -euo pipefail
           CURRENT="${GITHUB_REF_NAME}"
-          PREVIOUS=$(gh release list --limit 50 --json tagName \
+          PREVIOUS=$(gh release list \
+            --repo "${GITHUB_REPOSITORY}" \
+            --limit 50 \
+            --exclude-drafts \
+            --json tagName \
             | jq -r --arg current "$CURRENT" \
               '[.[] | select(.tagName != $current)] | .[0].tagName // empty')
           if [ -n "$PREVIOUS" ]; then

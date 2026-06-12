@@ -77,7 +77,7 @@ class TestHilogMsgParser:
         assert parser.log.tag == "[WubaApp][NetLogPrinterReq]"
         content = parser.log.get_msg_content()
         assert "POST:https://zppost.58.com/zcm/ajax/searchTrustedAddress" in content
-        assert '[cmd:default]' in content
+        assert "[cmd:default]" in content
         assert '"hrEntId":"0"' in content
 
     def test_flushes_previous_log_on_new_head(self):

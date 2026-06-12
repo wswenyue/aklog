@@ -15,6 +15,8 @@ from aklog.log.filter import FilterChain, MsgProcessor
 from aklog.log.info import LogInfo
 from aklog.log.theme import LogColorTheme
 
+LOG_FIELD_SEP = " | "
+
 
 class LogPrintCtr:
     """
@@ -77,9 +79,12 @@ class LogPrintCtr:
             level = log.get_level()
             theme = self._color_theme
             line = Text()
-            line.append("{0}#{1}#{2}#".format(p_time, p_name, p_tid), style=theme.meta_style())
+            line.append(
+                "{0}{1}{2}{1}{3}{1}".format(p_time, LOG_FIELD_SEP, p_name, p_tid),
+                style=theme.meta_style(),
+            )
             line.append(p_level, style=theme.level_style(level))
-            line.append("#{0}#".format(p_tag), style=theme.tag_style(level))
+            line.append("{0}{1}{0}".format(LOG_FIELD_SEP, p_tag), style=theme.tag_style(level))
             if isinstance(p_msg, Text):
                 line.append(p_msg)
             else:

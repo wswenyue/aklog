@@ -7,6 +7,7 @@ from typing import List
 from rich.text import Text
 
 from aklog.log.info import LogInfo, LogLevelHelper
+from aklog.log.printer import LOG_FIELD_SEP
 from aklog.log.theme import LogColorTheme
 
 
@@ -30,11 +31,11 @@ def render_log_line(log: LogInfo, theme: LogColorTheme) -> Text:
     p_msg = log.get_msg_content()
     line = Text()
     line.append(
-        "{0}#MyApp#{1}#".format(log.time, log.get_show_tid()),
+        "{0}{1}MyApp{1}{2}{1}".format(log.time, LOG_FIELD_SEP, log.get_show_tid()),
         style=theme.meta_style(),
     )
     line.append(log.get_level_name(), style=theme.level_style(level))
-    line.append("#{0}#".format(log.tag), style=theme.tag_style(level))
+    line.append("{0}{1}{0}".format(LOG_FIELD_SEP, log.tag), style=theme.tag_style(level))
     line.append(str(p_msg), style=theme.msg_style(level))
     return line
 

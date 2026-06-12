@@ -266,11 +266,19 @@ base = "#c62828"
 tag = "#ff5252"
 ```
 
+### 日志输出格式
+
+终端中每条日志的元数据以 ` | ` 分隔，便于与 URL（`https://`）及 JSON 中的冒号区分：
+
+```text
+12:34:56.789 | app@main | 12345 | D | MyTag | message body
+```
+
 ### 平台对照
 
 | 功能 | Android (adb) | HarmonyOS (hdc) |
 |------|---------------|-----------------|
-| 日志流 | logcat | hilog |
+| 日志流 | logcat | hilog（默认 `-v wrap`） |
 | 前台过滤 | dumpsys | aa dump |
 | 截图 | screencap | snapshot_display |
 | 录屏 | screenrecord | system screenrecorder |
@@ -278,3 +286,5 @@ tag = "#ff5252"
 | 安装 | adb install | hdc install |
 
 **说明：** HarmonyOS 录屏需要已解锁的实体设备，且系统录屏服务可用。
+
+**HarmonyOS HiLog 限制：** 单条日志最大约 4096 字符，超出部分会被系统截断（大段 JSON 响应末尾可能残缺）。aklog 已默认使用 `hilog -v wrap`，换行续写时不重复时间戳前缀，便于拼接长消息。

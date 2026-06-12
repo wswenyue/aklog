@@ -59,7 +59,15 @@ class TestHarmonyPlatform:
         platform._helper = MagicMock()
         platform.start_log_stream(level="W")
         cmd = platform._helper.popen.call_args[0][0]
-        assert "hilog -L W" in cmd
+        assert "hilog -v wrap -L W" in cmd
+
+    def test_start_log_stream_default_wrap(self):
+        platform = HarmonyPlatform("t1")
+        platform._helper = MagicMock()
+        platform.start_log_stream()
+        cmd = platform._helper.popen.call_args[0][0]
+        assert "hilog -v wrap" in cmd
+        assert "-L" not in cmd
 
     def test_dump_crash_logs(self, tmp_path, monkeypatch):
         platform = HarmonyPlatform("t1")

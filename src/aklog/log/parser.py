@@ -60,7 +60,7 @@ class HilogMsgParser:
     # 04-19 17:02:14.735  5394  5394 I A03200/testTag: message
     # tag: domainID/tag, bundleName/tag, or domainID/bundleName/tag
     PATTERN_HEAD = re.compile(
-        r"^(\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2}\.\d+)\s+(\d+)\s+(\d+)\s+([DIWEFV])\s+(?:[^/]+/)*([^/]+):\s*(.*)$"
+        r"^(\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2}\.\d+)\s+(\d+)\s+(\d+)\s+([DIWEFV])\s+([^:\n]+):\s*(.*)$"
     )
     log = None
 
@@ -70,13 +70,15 @@ class HilogMsgParser:
     @staticmethod
     def _build_log_info(group):
         msg = group[6]
+        label = group[5]
+        tag = label.rsplit("/", 1)[-1]
         info = LogInfo(
             _date=group[0],
             _time=group[1],
             _pid=group[2],
             _tid=group[3],
             _priority=group[4],
-            _tag=group[5],
+            _tag=tag,
         )
         if comm_tools.is_not_empty(msg):
             info.append_msg_content(msg)
@@ -91,9 +93,6 @@ class HilogMsgParser:
                 self._log_printer.print(self.log)
                 self.log = None
             self.log = HilogMsgParser._build_log_info(group)
-            if self.log.get_msg_content():
-                self._log_printer.print(self.log)
-                self.log = None
         else:
             if self.log:
                 self.log.append_msg_content(msg)

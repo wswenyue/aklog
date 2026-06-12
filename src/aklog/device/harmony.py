@@ -73,9 +73,9 @@ class HarmonyPlatform(DevicePlatform):
     def start_log_stream(self, level=None):
         lv = self._hilog_level_flag(level)
         if comm_tools.is_not_empty(lv):
-            cmd = "shell hilog -L {0}".format(lv)
+            cmd = "shell hilog -v wrap -L {0}".format(lv)
         else:
-            cmd = "shell hilog"
+            cmd = "shell hilog -v wrap"
         return self._helper.popen(
             cmd,
             buf_size=0,

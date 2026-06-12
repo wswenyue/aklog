@@ -6,7 +6,7 @@ from aklog.app.info import AppInfoHelper
 from aklog.log.filter import FilterChain, LevelFilter, MsgProcessor, PackageFilter, PackageMode, TagFilter
 from aklog.log.format import JsonValueFormat
 from aklog.log.info import LogInfo, LogLevelHelper
-from aklog.log.printer import LogPrintCtr
+from aklog.log.printer import LOG_FIELD_SEP, LogPrintCtr
 
 
 class FakePlatform:
@@ -148,3 +148,11 @@ class TestLogPrintCtr:
         with patch("aklog.log.printer.print_styled") as mock_print:
             _printer().print(None)
         mock_print.assert_not_called()
+
+    def test_output_uses_pipe_delimiter(self):
+        with patch("aklog.log.printer.print_styled") as mock_print:
+            _printer().print(_log(msg="POST:https://example.com/path"))
+        line = str(mock_print.call_args[0][0])
+        assert LOG_FIELD_SEP in line
+        assert "POST:https://example.com/path" in line
+        assert "#" not in line.split("POST:https://example.com/path")[0]

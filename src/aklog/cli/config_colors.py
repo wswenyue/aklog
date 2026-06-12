@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import copy
 
-from rich.console import Console
+from rich.console import Console, Group
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 
 from aklog.core.color_presets import COLOR_FIELDS, COLOR_PALETTE, PRESETS, get_color_field, set_color_field
 from aklog.core.config import default_color_config, load_config, save_config
@@ -38,12 +39,12 @@ def _render_colors_page(draft) -> None:
         palette.add_row(Text_block(name), name)
     console.print(palette)
     preview_lines = render_log_preview(LogColorTheme(draft))
-    preview = Panel("\n".join(line.plain for line in preview_lines), title="日志预览", border_style="blue")
+    preview = Panel(Group(*preview_lines), title="日志预览", border_style="blue")
     console.print(preview)
 
 
-def Text_block(name: str) -> str:
-    return "████ {0}".format(name)
+def Text_block(name: str) -> Text:
+    return Text("████", style=name)
 
 
 def colors_show() -> None:

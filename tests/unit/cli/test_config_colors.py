@@ -16,7 +16,9 @@ def config_file(monkeypatch, tmp_path):
 
 class TestConfigColors:
     def test_text_block(self):
-        assert "cyan" in config_colors.Text_block("cyan")
+        block = config_colors.Text_block("cyan")
+        assert block.plain == "████"
+        assert str(block.style) == "cyan"
 
     def test_colors_get_and_set(self, config_file, capsys):
         config_colors.colors_set("meta", "cyan")
